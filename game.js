@@ -174,22 +174,6 @@ class Enemy extends Ship{
         this.readyLauncher = true;
     }
     
-    move(){
-        if(contain(this, windowBounds) == undefined){
-            this.x += this.speedX * Math.sin(this.rotation);
-            this.radars.forEach(function(radar){
-                radar.x += this.speedX * Math.sin(this.rotation);
-            }.bind(this));         
-        }
-        else{
-            this.rotation = this.rotation + Math.PI;
-            this.x += this.speedX * Math.sin(this.rotation);
-            this.radars.forEach(function(radar){
-                radar.x += this.speedX * Math.sin(this.rotation);
-            }.bind(this));         
-        }
-    }
-    
     eFire(){
         if(this.readyLauncher){
             var eBullet = new energyBullet(this.bulletTextures["energyBullet"], this.rotation);
@@ -282,7 +266,87 @@ class Meteor extends PIXI.Sprite{
 }
 
 class Enemy1 extends Enemy{
+
+	move(){
+        if(contain(this, windowBounds) == undefined){
+            this.x += this.speedX * Math.sin(this.rotation);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(this.rotation);
+            }.bind(this));         
+        }
+        else{
+            this.rotation = this.rotation + Math.PI;
+            this.x += this.speedX * Math.sin(this.rotation);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(this.rotation);
+            }.bind(this));         
+        }
+    }
+    
+    radar(){
+    	this.radars.filter(function(radar){
+                if(hitTestRectangle(pShip, radar) && radar.obj.readyLauncher){
+                	radar.obj.factor = 0;
+                    if (radar.obj.x <= pShip.x) {
+                    	radar.obj.rotation = Math.PI/2;
+                    	radar.obj.eFire();
+                    } else {
+                    	radar.obj.rotation = 3*(Math.PI/2);
+                    	radar.obj.eFire();
+                    }
+                    radar.obj.factor = 1;
+                }
+                
+                if(radar.obj.energy == 0){
+                    app.stage.removeChild(radar);
+                    return false;
+                }
+                
+                return true;
+            });
+    }
+}
+
+class Enemy2 extends Enemy{
+
+	move(){
+        if(contain(this, windowBounds) == undefined){
+            this.y -= this.speedY * Math.cos(this.rotation);
+            this.radars.forEach(function(radar){
+                radar.y -= this.speedY * Math.cos(this.rotation);
+            }.bind(this));         
+        }
+        else{
+            this.rotation = this.rotation + Math.PI;
+            this.y -= this.speedY * Math.cos(this.rotation);
+            this.radars.forEach(function(radar){
+                radar.y -= this.speedY * Math.cos(this.rotation);
+            }.bind(this));         
+        }
+    }
 	
+	radar(){
+    	this.radars.filter(function(radar){
+                if(hitTestRectangle(pShip, radar) && radar.obj.readyLauncher){
+                	radar.obj.factor = 0;
+                    if (radar.obj.y <= pShip.y) {
+                    	radar.obj.rotation = Math.PI;
+                    	radar.obj.eFire();
+                    } else {
+                    	radar.obj.rotation = 0;
+                    	radar.obj.eFire();
+                    }
+                    radar.obj.factor = 1;
+                }
+                
+                if(radar.obj.energy == 0){
+                    app.stage.removeChild(radar);
+                    return false;
+                }
+                
+                return true;
+            });
+    }
 }
 
 function game(){
@@ -413,6 +477,40 @@ function game(){
                 
                 enemy.radars.push(frontRadar);
                 enemy.radars.push(endRadar);                  
+            }
+            else if(matrix[i][j] == '2'){
+            	var enemy = new Enemy2(shipTexture1);
+                enemy.width = xStep;
+                enemy.height = xStep;
+                enemy.x = j * xStep + 0.5 * xStep;
+                enemy.y = i * yStep + 0.5 * xStep;
+                enemy.rotation = j > 5 ?  (Math.PI) : 0;
+                enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+                enemy.deathItemsTextures = eDeathItems;
+                eShips.push(enemy);
+                
+                app.stage.addChild(enemy);
+                
+                var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+                frontRadar.width = xStep * 2;
+                frontRadar.height = xStep * 2;
+                frontRadar.x = enemy.x;
+                frontRadar.y = enemy.y + 1.5 * yStep;
+                frontRadar.alpha = 0.5;
+                radars.push(frontRadar);
+                app.stage.addChild(frontRadar);
+                
+                var endRadar = new Radar(enemyOneRadar, enemy, 0);
+                endRadar.width = xStep * 2;
+                endRadar.height = xStep * 2;
+                endRadar.x = enemy.x;
+                endRadar.y = enemy.y - 1.5 * yStep;
+                endRadar.alpha = 0.5;
+                radars.push(endRadar);
+                app.stage.addChild(endRadar);
+                
+                enemy.radars.push(frontRadar);
+                enemy.radars.push(endRadar);     
             }
             else if(matrix[i][j] == 'E'){
                 var breakerButton = new PIXI.Sprite(breakerTexture);
