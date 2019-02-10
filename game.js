@@ -321,13 +321,16 @@ class Enemy1 extends Enemy{
     }
     
     hit(bullet) {
+        var prevVX = this.speedX;
+        var prevVY = this.speedY;
+        this.speedX = 0;
+        this.speedY = 0;
     	super.hit(bullet);
     	var tempRotation = bullet.rotation % (2*Math.PI);
     	var prevRotation = this.rotation;
     	if (tempRotation < 0) {
     		tempRotation += 2*Math.PI;
     	}
-    	this.factor = 0;
     	if (tempRotation > Math.PI/4 && tempRotation <= 3*(Math.PI/4)) {
     		this.rotation = 3*(Math.PI/2);
     	} else if (tempRotation > 3*(Math.PI/4) && tempRotation <= 5*(Math.PI/4)) {
@@ -338,8 +341,11 @@ class Enemy1 extends Enemy{
     		this.rotation = Math.PI;
     	}
     	this.eFire();
-    	this.rotation = prevRotation;
-    	this.factor = 1;
+    	setTimeout(function(){
+    	    this.rotation = prevRotation;
+    	    this.speedX = prevVX;
+    	    this.speedY = prevVY;    	
+    	}.bind(this), 200);
     }
 }
 
