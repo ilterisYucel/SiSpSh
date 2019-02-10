@@ -161,7 +161,7 @@ class playerShip extends Ship{
     
 }
 
-class Enemy1 extends Ship{
+class Enemy extends Ship{
 
     constructor(texture, energy = 50, factor = 1, itemList = [], 
                     bulletTextures = {}, deathItemsTextures = [], effectTextures={}, radars = []){
@@ -202,6 +202,26 @@ class Enemy1 extends Ship{
             this.readyLauncher = false;
         }
         
+    }
+    
+    radar(){
+    	this.radars.filter(function(radar){
+                if(hitTestRectangle(pShip, radar)){
+                    var tempRotation = radar.obj.rotation;
+                    radar.obj.factor = 0;
+                    radar.obj.rotation = Math.PI/2 + /*tempRotation +*/ calculateSlope(pShip, radar.obj);
+                    radar.obj.eFire();
+                    radar.obj.factor = 1;
+                    radar.obj.rotation = tempRotation;
+                }
+                
+                if(radar.obj.energy == 0){
+                    app.stage.removeChild(radar);
+                    return false;
+                }
+                
+                return true;
+            });
     }
     
     death(){
@@ -259,6 +279,10 @@ class Meteor extends PIXI.Sprite{
         }.bind(this));
     }
 
+}
+
+class Enemy1 extends Enemy{
+	
 }
 
 function game(){
@@ -475,23 +499,7 @@ function game(){
         
         eShips = eShips.filter(function(eShip){
             eShip.move();
-            eShip.radars.filter(function(radar){
-                if(hitTestRectangle(pShip, radar)){
-                    var tempRotation = radar.obj.rotation;
-                    radar.obj.factor = 0;
-                    radar.obj.rotation = tempRotation + calculateSlope(pShip, radar.obj);
-                    radar.obj.eFire();
-                    radar.obj.factor = 1;
-                    radar.obj.rotation = tempRotation;
-                }
-                
-                if(radar.obj.energy == 0){
-                    app.stage.removeChild(radar);
-                    return false;
-                }
-                
-                return true;
-            });
+            eShip.radar();
             
             if(eShip.energy == 0){
                 app.stage.removeChild(eShip);
@@ -681,14 +689,15 @@ function calculateDistance(obj0, obj1){
 
 function calculateSlope(obj, obj1){
 
-    var slope, diffX, diffY;
+    /*var slope, diffX, diffY;
     
     diffX = Math.abs(obj.x - obj1.x);
     diffY = Math.abs(obj.y - obj1.y);
     
     slope = Math.atan(diffY / diffX) * 180 / Math.PI;
     
-    return slope;
+    return slope;*/
+    return Math.atan2(obj.y - obj1.y, obj.x - obj1.x);
 }
 
 function randomInt(min, max){
