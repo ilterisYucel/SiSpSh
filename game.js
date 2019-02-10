@@ -176,6 +176,7 @@ class Enemy extends Ship{
         this.prevRotation = null;
         this.prevVX = null;
         this.prevVY = null;
+        this.hitCount = 0;
     }
     
     eFire(){
@@ -327,13 +328,14 @@ class Enemy1 extends Enemy{
     hit(bullet) {
     	super.hit(bullet);
     	var tempRotation = bullet.rotation % (2*Math.PI);
-    	if (!this.prevRotation) {
+    	if (this.hitCount == 0) {
     		this.prevRotation = this.rotation;
     		this.prevVX = this.speedX;
 		    this.prevVY = this.speedY;
 		    this.speedX = 0;
 		    this.speedY = 0;
     	}
+    	this.hitCount++;
     	if (tempRotation < 0) {
     		tempRotation += 2*Math.PI;
     	}
@@ -351,10 +353,13 @@ class Enemy1 extends Enemy{
     	    this.rotation = this.prevRotation;
     	    this.speedX = this.prevVX;
     	    this.speedY = this.prevVY;
-    	        
-    	    this.prevRotation = null;
-    	    this.prevVX = null;
-    	    this.prevVY = null;	
+    	    
+    	    this.hitCount--;
+    	    if (this.hitCount == 0) {
+			    this.prevRotation = null;
+			    this.prevVX = null;
+			    this.prevVY = null;
+    	    }
     	}.bind(this), 200);
     }
 }
