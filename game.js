@@ -87,6 +87,7 @@ class playerShip extends Ship{
         this.effectTextures = effectTextures;
         this.readyLauncher = true;
         this.intervalId = 0;
+        this.alive = true;
     }
     
     move(direction){
@@ -172,6 +173,9 @@ class Enemy extends Ship{
         this.effectTextures = effectTextures;
         this.radars = radars;
         this.readyLauncher = true;
+        this.prevRotation = null;
+        this.prevVX = null;
+        this.prevVY = null;
     }
     
     eFire(){
@@ -321,13 +325,15 @@ class Enemy1 extends Enemy{
     }
     
     hit(bullet) {
-        var prevVX = this.speedX;
-        var prevVY = this.speedY;
-        this.speedX = 0;
-        this.speedY = 0;
     	super.hit(bullet);
     	var tempRotation = bullet.rotation % (2*Math.PI);
-    	var prevRotation = this.rotation;
+    	if (!this.prevRotation) {
+    		this.prevRotation = this.rotation;
+    		this.prevVX = this.speedX;
+		    this.prevVY = this.speedY;
+		    this.speedX = 0;
+		    this.speedY = 0;
+    	}
     	if (tempRotation < 0) {
     		tempRotation += 2*Math.PI;
     	}
@@ -342,9 +348,13 @@ class Enemy1 extends Enemy{
     	}
     	this.eFire();
     	setTimeout(function(){
-    	    this.rotation = prevRotation;
-    	    this.speedX = prevVX;
-    	    this.speedY = prevVY;    	
+    	    this.rotation = this.prevRotation;
+    	    this.speedX = this.prevVX;
+    	    this.speedY = this.prevVY;
+    	        
+    	    this.prevRotation = null;
+    	    this.prevVX = null;
+    	    this.prevVY = null;	
     	}.bind(this), 200);
     }
 }
@@ -681,9 +691,10 @@ function game(){
             return true;
         });
         
-        if(pShip.energy == 0){
+        if(pShip.energy <= 0 && pShip.alive){
             app.stage.removeChild(pShip);
             pShip.death();
+            pShip.alive = false;
         }
     });
 }
