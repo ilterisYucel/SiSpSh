@@ -208,6 +208,10 @@ class Enemy extends Ship{
             });
     }
     
+    hit(bullet){
+    	this.energy -= bullet.effect;
+    }
+    
     death(){
         this.deathItemsTextures.forEach(function(texture){
             var sprite = new PIXI.Sprite(texture);
@@ -305,6 +309,28 @@ class Enemy1 extends Enemy{
                 return true;
             });
     }
+    
+    hit(bullet) {
+    	super.hit(bullet);
+    	var tempRotation = bullet.rotation % (2*Math.PI);
+    	var prevRotation = this.rotation;
+    	if (tempRotation < 0) {
+    		tempRotation += 2*Math.PI;
+    	}
+    	this.factor = 0;
+    	if (tempRotation > Math.PI/4 && tempRotation <= 3*(Math.PI/4)) {
+    		this.rotation = 3*(Math.PI/2);
+    	} else if (tempRotation > 3*(Math.PI/4) && tempRotation <= 5*(Math.PI/4)) {
+    		this.rotation = 0;
+    	} else if (tempRotation > 5*(Math.PI/4) && tempRotation <= 7*(Math.PI/4)) {
+    		this.rotation = Math.PI/2;
+    	} else {
+    		this.rotation = Math.PI;
+    	}
+    	this.eFire();
+    	this.rotation = prevRotation;
+    	this.factor = 1;
+    }
 }
 
 class Enemy2 extends Enemy{
@@ -346,6 +372,28 @@ class Enemy2 extends Enemy{
                 
                 return true;
             });
+    }
+    
+    hit(bullet) {
+    	super.hit(bullet);
+    	var tempRotation = bullet.rotation % (2*Math.PI);
+    	var prevRotation = this.rotation;
+    	if (tempRotation < 0) {
+    		tempRotation += 2*Math.PI;
+    	}
+    	this.factor = 0;
+    	if (tempRotation > Math.PI/4 && tempRotation <= 3*(Math.PI/4)) {
+    		this.rotation = 3*(Math.PI/2);
+    	} else if (tempRotation > 3*(Math.PI/4) && tempRotation <= 5*(Math.PI/4)) {
+    		this.rotation = 0;
+    	} else if (tempRotation > 5*(Math.PI/4) && tempRotation <= 7*(Math.PI/4)) {
+    		this.rotation = Math.PI/2;
+    	} else {
+    		this.rotation = Math.PI;
+    	}
+    	this.eFire();
+    	this.rotation = prevRotation;
+    	this.factor = 1;
     }
 }
 
@@ -553,7 +601,7 @@ function game(){
             
             eShips.forEach(function(eShip){
                 if(hitTestRectangle(eShip, bullet)){
-                    eShip.energy -= bullet.effect;
+                    eShip.hit(bullet);
                     app.stage.removeChild(bullet);
                     ret = false;
                 }
