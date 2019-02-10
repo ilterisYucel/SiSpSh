@@ -276,6 +276,11 @@ class Enemy1 extends Enemy{
             this.x += this.speedX * Math.sin(this.rotation);
             this.radars.forEach(function(radar){
                 radar.x += this.speedX * Math.sin(this.rotation);
+                if (radar.x >= this.x) {
+                	radar.x = this.x + 1.5 * xStep;
+                } else {
+                	radar.x = this.x - 1.5 * xStep;
+                }
             }.bind(this));         
         }
         else{
@@ -283,6 +288,11 @@ class Enemy1 extends Enemy{
             this.x += this.speedX * Math.sin(this.rotation);
             this.radars.forEach(function(radar){
                 radar.x += this.speedX * Math.sin(this.rotation);
+                if (radar.x >= this.x) {
+                	radar.x = this.x + 1.5 * xStep;
+                } else {
+                	radar.x = this.x - 1.5 * xStep;
+                }
             }.bind(this));         
         }
     }
@@ -340,6 +350,11 @@ class Enemy2 extends Enemy{
             this.y -= this.speedY * Math.cos(this.rotation);
             this.radars.forEach(function(radar){
                 radar.y -= this.speedY * Math.cos(this.rotation);
+                if (radar.y >= this.y) {
+                	radar.y = this.y + 1.5 * yStep;
+                } else {
+                	radar.y = this.y - 1.5 * yStep;
+                }
             }.bind(this));         
         }
         else{
@@ -347,6 +362,11 @@ class Enemy2 extends Enemy{
             this.y -= this.speedY * Math.cos(this.rotation);
             this.radars.forEach(function(radar){
                 radar.y -= this.speedY * Math.cos(this.rotation);
+                if (radar.y >= this.y) {
+                	radar.y = this.y + 1.5 * yStep;
+                } else {
+                	radar.y = this.y - 1.5 * yStep;
+                }
             }.bind(this));         
         }
     }
