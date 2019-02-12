@@ -7,7 +7,7 @@ var w = window,
 
 var path = "./assets/images/";
 var level = parseInt(getAllUrlParams().level);
-var pShip, app, bg;
+var pShip, app, bg, energyCounter, counterStep;
 var pBullets = [];
 var eBullets = [];
 var eShips = [];
@@ -49,7 +49,7 @@ class bullet extends PIXI.Sprite{
 }
 
 class energyBullet extends bullet{
-    constructor(texture, rotation, effect = 10, factor = 1){
+    constructor(texture, rotation, effect = 10, factor = 2){
         super(texture, rotation);
         this.factor = factor;
         this.effect = effect * factor;
@@ -177,6 +177,7 @@ class Enemy extends Ship{
         this.prevVX = null;
         this.prevVY = null;
         this.hitCount = 0;
+        
     }
     
     eFire(){
@@ -190,27 +191,25 @@ class Enemy extends Ship{
             eBullets.push(eBullet);
             this.readyLauncher = false;
         }
-        
     }
     
     radar(){
     	this.radars.filter(function(radar){
                 if(hitTestRectangle(pShip, radar)){
-                    var tempRotation = radar.obj.rotation;
-                    radar.obj.factor = 0;
-                    radar.obj.rotation = Math.PI/2 + /*tempRotation +*/ calculateSlope(pShip, radar.obj);
-                    radar.obj.eFire();
-                    radar.obj.factor = 1;
-                    radar.obj.rotation = tempRotation;
+                    var tempRotation = this.rotation;
+                    this.rotation = Math.PI/2 + /*tempRotation +*/ calculateSlope(pShip, radar.obj);
+                    this.eFire();
+                    this.factor = 1;
+                    this.rotation = tempRotation;
                 }
                 
-                if(radar.obj.energy == 0){
+                if(this.energy == 0){
                     app.stage.removeChild(radar);
                     return false;
                 }
                 
                 return true;
-            });
+            }.bind(this));
     }
     
     hit(bullet){
@@ -304,25 +303,23 @@ class Enemy1 extends Enemy{
     
     radar(){
     	this.radars.filter(function(radar){
-                if(hitTestRectangle(pShip, radar) && radar.obj.readyLauncher){
-                	radar.obj.factor = 0;
-                    if (radar.obj.x <= pShip.x) {
-                    	radar.obj.rotation = Math.PI/2;
-                    	radar.obj.eFire();
+                if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+                    if (this.x <= pShip.x) {
+                    	this.rotation = Math.PI/2;
+                    	this.eFire();
                     } else {
-                    	radar.obj.rotation = 3*(Math.PI/2);
-                    	radar.obj.eFire();
+                    	this.rotation = 3*(Math.PI/2);
+                    	this.eFire();
                     }
-                    radar.obj.factor = 1;
                 }
                 
-                if(radar.obj.energy == 0){
+                if(this.energy == 0){
                     app.stage.removeChild(radar);
                     return false;
                 }
                 
                 return true;
-            });
+            }.bind(this));
     }
     
     hit(bullet) {
@@ -394,31 +391,36 @@ class Enemy2 extends Enemy{
 	
 	radar(){
     	this.radars.filter(function(radar){
-                if(hitTestRectangle(pShip, radar) && radar.obj.readyLauncher){
-                	radar.obj.factor = 0;
-                    if (radar.obj.y <= pShip.y) {
-                    	radar.obj.rotation = Math.PI;
-                    	radar.obj.eFire();
+                if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+                    if (this.y <= pShip.y) {
+                    	this.rotation = Math.PI;
+                    	this.eFire();
                     } else {
-                    	radar.obj.rotation = 0;
-                    	radar.obj.eFire();
+                    	this.rotation = 0;
+                    	this.eFire();
                     }
-                    radar.obj.factor = 1;
                 }
                 
-                if(radar.obj.energy == 0){
+                if(this.energy == 0){
                     app.stage.removeChild(radar);
                     return false;
                 }
                 
                 return true;
-            });
+            }.bind(this));
     }
     
     hit(bullet) {
     	super.hit(bullet);
     	var tempRotation = bullet.rotation % (2*Math.PI);
-    	var prevRotation = this.rotation;
+    	if (this.hitCount == 0) {
+    		this.prevRotation = this.rotation;
+    		this.prevVX = this.speedX;
+		    this.prevVY = this.speedY;
+		    this.speedX = 0;
+		    this.speedY = 0;
+    	}
+    	this.hitCount++;
     	if (tempRotation < 0) {
     		tempRotation += 2*Math.PI;
     	}
@@ -433,8 +435,18 @@ class Enemy2 extends Enemy{
     		this.rotation = Math.PI;
     	}
     	this.eFire();
-    	this.rotation = prevRotation;
-    	this.factor = 1;
+    	setTimeout(function(){
+    	    this.rotation = this.prevRotation;
+    	    this.speedX = this.prevVX;
+    	    this.speedY = this.prevVY;
+    	    
+    	    this.hitCount--;
+    	    if (this.hitCount == 0) {
+			    this.prevRotation = null;
+			    this.prevVX = null;
+			    this.prevVY = null;
+    	    }
+    	}.bind(this), 200);
     }
 }
 
@@ -509,6 +521,46 @@ function game(){
         .on('touchend', touchEnd); 
     
     app.stage.addChild(bg);
+    
+    energyCounter = new PIXI.Container();
+    energyCounter.position.set(xStep / 2, 0.375 * yStep );
+    app.stage.addChild(energyCounter);
+    
+    var graphic = new PIXI.Graphics();
+    graphic.beginFill(0x343b3d, 0.5);
+    graphic.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
+    graphic.drawRoundedRect(0, 0, 2 * xStep, yStep / 4, 10);
+    graphic.endFill();
+    energyCounter.addChild(graphic);
+    
+    energyStep = xStep / 50;
+    
+    var graphic1 = new PIXI.Graphics();
+    graphic1.beginFill(0xac3939, 0.5);
+    //energyCounter.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
+    graphic1.drawRoundedRect(0, 0, xStep, yStep / 4, 10);
+    graphic1.endFill();
+    energyCounter.addChild(graphic1);
+    
+    energyCounter.counter = graphic1;
+    
+    var breakerButton = new PIXI.Sprite(breakerTexture);
+    breakerButton.x = 9 * xStep + 0.25 * xStep;
+    breakerButton.y = 0 * yStep + 0.5 * yStep;
+    breakerButton.width = xStep;
+    breakerButton.height = yStep / 2;
+    breakerButton.anchor.set(0.5);
+    breakerButton.alpha = 0.3;
+    breakerButton.buttonMode = true;
+    breakerButton.interactive = true;
+    breakerButton
+            .on('mousedown', breakMeteor)
+            .on('mouseup', releaseMeteor)
+            .on('touchstart', breakMeteor)
+            .on('touchend', releaseMeteor);
+               
+    app.stage.addChild(breakerButton);
+    
     
     for(var i = 0; i < matrix.length; i++){
         for(var j = 0; j < matrix[0].length; j++){
@@ -600,25 +652,7 @@ function game(){
                 
                 enemy.radars.push(frontRadar);
                 enemy.radars.push(endRadar);     
-            }
-            else if(matrix[i][j] == 'E'){
-                var breakerButton = new PIXI.Sprite(breakerTexture);
-                breakerButton.x = j * xStep + 0.25 * xStep;
-                breakerButton.y = i * yStep + 0.5 * yStep;
-                breakerButton.width = xStep;
-                breakerButton.height = yStep / 2;
-                breakerButton.anchor.set(0.5);
-                breakerButton.alpha = 0.5;
-                breakerButton.buttonMode = true;
-                breakerButton.interactive = true;
-                breakerButton
-                    .on('mousedown', breakMeteor)
-                    .on('mouseup', releaseMeteor)
-                    .on('touchstart', breakMeteor)
-                    .on('touchend', releaseMeteor);
-               
-               app.stage.addChild(breakerButton);
-            }     
+            }    
         }
     }
     
@@ -629,6 +663,31 @@ function game(){
     });
     
     app.ticker.add(function(){
+        
+        if(pShip.alive){
+            energyCounter.counter.width = pShip.energy * energyStep;
+        }
+        
+        meteors = meteors.filter(function(meteor){
+            var ret = true;
+            
+            if(hitTestRectangle(meteor, pShip)){
+                pShip.x += pShip.speedX * Math.sin(pShip.rotation + Math.PI);
+                pShip.y -= pShip.speedY * Math.cos(pShip.rotation + Math.PI);
+                meteor.x += pShip.speedX * Math.sin(pShip.rotation);
+                meteor.y -= pShip.speedY * Math.cos(pShip.rotation);
+                pShip.energy--;  
+                ret = true;                
+            }
+            
+            if(/*contain1(meteor, windowBounds)*/ contain(meteor, windowBounds) != undefined){
+                //app.stage.removeChild(meteor);
+                //ret = false;
+                ret = true;
+            }
+            
+            return ret;
+        });
         
         pBullets = pBullets.filter(function(bullet){
         
@@ -795,7 +854,6 @@ function releaseMeteor(){
 
 }
 
-    
 function contain(sprite, container){
     
     var collision = undefined;
@@ -817,6 +875,29 @@ function contain(sprite, container){
 
   	if (sprite.y + sprite.height / 2 > container.height) {
     	sprite.y = container.height - sprite.height;
+    	collision = "bottom";
+  	}
+
+  	return collision;
+}
+
+function contain1(sprite, container){
+    
+    var collision = undefined;
+
+  	if (sprite.x <= container.x) {
+    	collision = "left";
+  	}
+
+  	if (sprite.y <= container.y) {
+    	collision = "top";
+  	}
+
+  	if (sprite.x >= container.width) {
+    	collision = "right";
+  	}
+
+  	if (sprite.y >= container.height) {
     	collision = "bottom";
   	}
 
