@@ -28,6 +28,11 @@ var windowBounds = {
                         height : adLoc
                     };
                     
+var rotationCenter = {
+                        x : 0.5 * x,
+                        y : y
+                     };
+                    
 var matrix;
 
 let xhr = new XMLHttpRequest();
@@ -251,6 +256,7 @@ class Meteor extends PIXI.Sprite{
         super(texture);
         this.breakItemList = breakItemList;
         this.anchor.set(0.5);
+        this.loc = 0;
     }
     
     breakIt(){
@@ -459,7 +465,7 @@ function game(){
     var meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
     var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002.png");
     
-    var breakerTexture = new PIXI.Texture.fromImage(path + "spaceParts_087.png");
+    var breakerTexture = new PIXI.Texture.fromImage(path + "powerupRed_bolt.png");
     
     var breakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_009.png");
     var breakEffect1 = new PIXI.Texture.fromImage(path + "spaceEffects_011.png");
@@ -546,7 +552,7 @@ function game(){
     
     var breakerButton = new PIXI.Sprite(breakerTexture);
     breakerButton.x = 9 * xStep + 0.25 * xStep;
-    breakerButton.y = 0 * yStep + 0.5 * yStep;
+    breakerButton.y = 0 * yStep + 0.375 * yStep;
     breakerButton.width = xStep;
     breakerButton.height = yStep / 2;
     breakerButton.anchor.set(0.5);
@@ -570,6 +576,7 @@ function game(){
                 meteor.y = i * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
+                meteor.loc = calculateSlope(rotationCenter, meteor) * 180 / Math.PI;
                 meteors.push(meteor);
                 
                 app.stage.addChild(meteor);
@@ -662,6 +669,13 @@ function game(){
         enemy.controlStatus();
     });
     
+    meteors.forEach(function(meteor){
+        setInterval(function(){
+            meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
+            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, rotationCenter.x,  rotationCenter.y, meteor.loc);
+        }, 1000);
+    });
+    
     app.ticker.add(function(){
         
         if(pShip.alive){
@@ -680,11 +694,11 @@ function game(){
                 ret = true;                
             }
             
-            if(/*contain1(meteor, windowBounds)*/ contain(meteor, windowBounds) != undefined){
+            /*if(contain1(meteor, windowBounds) contain(meteor, windowBounds) != undefined){
                 //app.stage.removeChild(meteor);
                 //ret = false;
                 ret = true;
-            }
+            }*/
             
             return ret;
         });
@@ -970,7 +984,15 @@ function calculateSlope(obj, obj1){
 }
 
 function randomInt(min, max){
+
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function rotateElliptic(object, xCentre, yCentre, a, b, i){
+
+    object.x = xCentre + (a * Math.cos(i));
+    object.y = yCentre + (b * Math.sin(i));
+		
 }
 
 function getAllUrlParams(url) {
