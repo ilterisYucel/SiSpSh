@@ -257,6 +257,8 @@ class Meteor extends PIXI.Sprite{
         this.breakItemList = breakItemList;
         this.anchor.set(0.5);
         this.loc = 0;
+        this.a = 0;
+        this.b = 0;
     }
     
     breakIt(){
@@ -577,6 +579,8 @@ function game(){
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.loc = calculateSlope(rotationCenter, meteor) * 180 / Math.PI;
+                meteor.a = (meteor.x - rotationCenter.x) / (Math.cos(meteor.loc));
+                meteor.b = (meteor.y - rotationCenter.y) / (Math.sin(meteor.loc));
                 meteors.push(meteor);
                 
                 app.stage.addChild(meteor);
@@ -672,9 +676,9 @@ function game(){
     setInterval(function(){
         meteors.forEach(function(meteor){
             meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
-            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, rotationCenter.x,  rotationCenter.y, meteor.loc);
+            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);
         });
-    }, 1000);
+    }, 100);
     
     app.ticker.add(function(){
         
