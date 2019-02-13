@@ -231,6 +231,11 @@ class Enemy extends Ship{
             sprite.anchor.set(0.5);
             app.stage.addChild(sprite);
         }.bind(this));
+        
+        this.radars.filter(function(radar){
+        	app.stage.removeChild(radar);
+            return false;
+        });
     }
     
     controlStatus(){
@@ -321,11 +326,6 @@ class Enemy1 extends Enemy{
                     }
                 }
                 
-                if(this.energy == 0){
-                    app.stage.removeChild(radar);
-                    return false;
-                }
-                
                 return true;
             }.bind(this));
     }
@@ -407,11 +407,6 @@ class Enemy2 extends Enemy{
                     	this.rotation = 0;
                     	this.eFire();
                     }
-                }
-                
-                if(this.energy == 0){
-                    app.stage.removeChild(radar);
-                    return false;
                 }
                 
                 return true;
