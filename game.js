@@ -669,12 +669,12 @@ function game(){
         enemy.controlStatus();
     });
     
-    meteors.forEach(function(meteor){
-        setInterval(function(){
+    setInterval(function(){
+        meteors.forEach(function(meteor){
             meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
             rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, rotationCenter.x,  rotationCenter.y, meteor.loc);
-        }, 1000);
-    });
+        });
+    }, 1000);
     
     app.ticker.add(function(){
         
@@ -761,7 +761,7 @@ function game(){
             eShip.move();
             eShip.radar();
             
-            if(eShip.energy == 0){
+            if(eShip.energy <= 0){
                 app.stage.removeChild(eShip);
                 eShip.death();
                 return false;
