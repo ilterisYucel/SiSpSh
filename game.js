@@ -315,7 +315,7 @@ class Enemy1 extends Enemy{
     }
     
     radar(){
-    	this.radars.filter(function(radar){
+    	this.radars.forEach(function(radar){
                 if(hitTestRectangle(pShip, radar) && this.readyLauncher){
                     if (this.x <= pShip.x) {
                     	this.rotation = Math.PI/2;
@@ -325,8 +325,6 @@ class Enemy1 extends Enemy{
                     	this.eFire();
                     }
                 }
-                
-                return true;
             }.bind(this));
     }
     
