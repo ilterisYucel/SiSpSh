@@ -28,11 +28,17 @@ var windowBounds = {
                         height : adLoc
                     };
                     
-var rotationCenter = {
-                        x : 0.5 * x,
-                        y : y
+var rotationParams = {
+                        f0: {
+                        	x : 0.5 * x,
+                        	y : 0.4 * y
+                        },
+                        f1: {
+                        	x : 0.5 * x,
+                        	y : 0.6 * y
+                        },
                      };
-                    
+
 var matrix;
 
 let xhr = new XMLHttpRequest();
@@ -261,9 +267,10 @@ class Meteor extends PIXI.Sprite{
         super(texture);
         this.breakItemList = breakItemList;
         this.anchor.set(0.5);
-        this.loc = 0;
+        this.t = 0;
         this.a = 0;
         this.b = 0;
+        this.s = 0;
     }
     
     breakIt(){
@@ -282,6 +289,34 @@ class Meteor extends PIXI.Sprite{
                 app.stage.removeChild(effect);
             },200);
         }.bind(this));
+    }
+    
+    calculateRotParams() {
+    	this.t = Math.atan2(this.y - rotationParams.o.y, this.x - rotationParams.o.x) - Math.PI/2;
+    	
+    	var m_t = {
+    		x : (this.x-rotationParams.o.x)*rotationParams.cos_e + (this.y-rotationParams.o.y)*rotationParams.sin_e,
+    		y : (this.y-rotationParams.o.y)*rotationParams.cos_e + (this.x-rotationParams.o.x)*rotationParams.sin_e
+    	};
+    	
+    	var c_2 = (((rotationParams.f0_t_x - rotationParams.f1_t_x) ** 2) / 4);
+    	var temp = (m_t.x ** 2) + (m_t.y ** 2) - c_2;
+    	
+    	var b_2 = ( temp + Math.sqrt( temp ** 2 + 4*c_2*(m_t.y ** 2)) ) / 2;
+    	this.b = Math.sqrt(b_2);
+    	this.a = Math.sqrt(b_2 + c_2);
+    }
+    
+    move() {
+    	this.t = (this.t + this.s) % (2*Math.PI);
+    	
+    	var m_t = {
+    		x : this.a * Math.cos(this.t),
+    		y : this.b * Math.sin(this.t)
+    	};
+    	
+    	this.x = m_t.x*rotationParams.cos_e + m_t.y*rotationParams.sin_e + rotationParams.o.x;
+    	this.y = m_t.y*rotationParams.cos_e - m_t.x*rotationParams.sin_e + rotationParams.o.y;
     }
 
 }
@@ -451,8 +486,24 @@ class Enemy2 extends Enemy{
     }
 }
 
-function game(){
+function calculateRotationParams() {
+	rotationParams.o = {
+		x : (rotationParams.f0.x + rotationParams.f1.x) / 2,
+		y : (rotationParams.f0.y + rotationParams.f1.y) / 2
+	};
+	
+	var e = Math.atan2(rotationParams.f0.y - rotationParams.f1.y, rotationParams.f0.x - rotationParams.f1.x);
+	
+	rotationParams.sin_e = Math.sin(e);
+	rotationParams.cos_e = Math.cos(e);
+	
+	rotationParams.f0_t_x = (rotationParams.f0.x - rotationParams.o.x)*rotationParams.cos_e + (rotationParams.f0.y - rotationParams.o.y)*rotationParams.sin_e;
+	rotationParams.f1_t_x = (rotationParams.f1.x - rotationParams.o.x)*rotationParams.cos_e + (rotationParams.f1.y - rotationParams.o.y)*rotationParams.sin_e;
+}
 
+function game(){
+	calculateRotationParams();
+	
     var bgTexture = new PIXI.Texture.from(path + "starfield.png");
     var shipTexture = new PIXI.Texture.from(path + "spaceShips_001.png");
     var playerEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_010.png");
@@ -571,9 +622,23 @@ function game(){
                 meteor.y = i * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
-                meteor.loc = calculateSlope(rotationCenter, meteor) * 180 / Math.PI;
-                meteor.a = (meteor.x - rotationCenter.x) / (Math.cos(meteor.loc));
-                meteor.b = (meteor.y - rotationCenter.y) / (Math.sin(meteor.loc));
+                meteor.s = Math.PI/180;
+                
+                meteor.calculateRotParams();
+                
+                meteors.push(meteor);
+                
+                app.stage.addChild(meteor);
+            } else if (matrix[i][j] == 'W') {
+            	var meteor = new Meteor(meteorTexture, breakEffects);
+                meteor.x = j * xStep + 0.5 * xStep;
+                meteor.y = i * yStep + 0.5 * xStep;
+                meteor.width = xStep;
+                meteor.height = xStep;
+                meteor.s = -Math.PI/180;
+                
+                meteor.calculateRotParams();
+                
                 meteors.push(meteor);
                 
                 app.stage.addChild(meteor);
@@ -668,10 +733,11 @@ function game(){
     
     setInterval(function(){
         meteors.forEach(function(meteor){
-            meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
-            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);
+        	meteor.move();
+            /*meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
+            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);*/
         });
-    }, 100);
+    }, 1000);
     
     app.ticker.add(function(){
         
