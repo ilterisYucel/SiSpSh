@@ -292,7 +292,7 @@ class Meteor extends PIXI.Sprite{
     }
     
     calculateRotParams() {
-    	this.t = Math.atan2(this.y - rotationParams.o.y, this.x - rotationParams.o.x) - Math.PI/2;
+    	this.t = Math.atan2(this.y - rotationParams.o.y, this.x - rotationParams.o.x) + rotationParams.e;
     	
     	var m_t = {
     		x : (this.x-rotationParams.o.x)*rotationParams.cos_e + (this.y-rotationParams.o.y)*rotationParams.sin_e,
@@ -492,10 +492,10 @@ function calculateRotationParams() {
 		y : (rotationParams.f0.y + rotationParams.f1.y) / 2
 	};
 	
-	var e = Math.atan2(rotationParams.f0.y - rotationParams.f1.y, rotationParams.f0.x - rotationParams.f1.x);
+	rotationParams.e = Math.atan2(rotationParams.f0.y - rotationParams.f1.y, rotationParams.f0.x - rotationParams.f1.x);
 	
-	rotationParams.sin_e = Math.sin(e);
-	rotationParams.cos_e = Math.cos(e);
+	rotationParams.sin_e = Math.sin(rotationParams.e);
+	rotationParams.cos_e = Math.cos(rotationParams.e);
 	
 	rotationParams.f0_t_x = (rotationParams.f0.x - rotationParams.o.x)*rotationParams.cos_e + (rotationParams.f0.y - rotationParams.o.y)*rotationParams.sin_e;
 	rotationParams.f1_t_x = (rotationParams.f1.x - rotationParams.o.x)*rotationParams.cos_e + (rotationParams.f1.y - rotationParams.o.y)*rotationParams.sin_e;
