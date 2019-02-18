@@ -737,7 +737,7 @@ function game(){
             /*meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
             rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);*/
         });
-    }, 1000);
+    }, 100);
     
     app.ticker.add(function(){
         
