@@ -89,7 +89,7 @@ class Ship extends PIXI.Sprite{
 
 class playerShip extends Ship{
 
-    constructor(texture, speed = 1, energy = 50, factor = 1, itemList = [], 
+    constructor(texture, speed = 1, energy = 50, factor = 1, itemList = {}, 
                     bulletTextures = {}, deathItemsTextures = [], effectTextures = {}){
         super(texture, energy, factor);
         this.itemList = itemList;
@@ -121,6 +121,18 @@ class playerShip extends Ship{
             this.rotation = 3 * Math.PI / 2;
             this.x -= this.speedX;
         }
+        
+    }
+    
+    moveItems(direction){
+        var breakerLoc = this.getBreakerLoc();
+        Object.values(this.itemList).forEach(function(obj){
+                if(obj){
+                    obj.rotation = this.rotation;
+                    obj.x = breakerLoc.x + obj.distance * Math.sin(obj.rotation);
+                    obj.y = breakerLoc.y - obj.distance * Math.cos(this.rotation); 
+                }
+        }.bind(this));
     }
     
     eFire(){
@@ -271,6 +283,8 @@ class Meteor extends PIXI.Sprite{
         this.a = 0;
         this.b = 0;
         this.s = 0;
+        this.state = "free";
+        this.transporter = null;
     }
     
     breakIt(){
@@ -318,6 +332,13 @@ class Meteor extends PIXI.Sprite{
     	this.x = m_t.x*rotationParams.cos_e + m_t.y*rotationParams.sin_e + rotationParams.o.x;
     	this.y = m_t.y*rotationParams.cos_e - m_t.x*rotationParams.sin_e + rotationParams.o.y;
     }
+    
+    /*transportedMove(){
+        if(this.transporter != null){
+            this.x += this.transporter.speedX * Math.sin(this.transporter.rotation);
+            this.y -= this.transporter.speedY * Math.cos(this.transporter.rotation);
+        }*/ 
+    //}
 
 }
 
@@ -351,16 +372,22 @@ class Enemy1 extends Enemy{
     
     radar(){
     	this.radars.forEach(function(radar){
-                if(hitTestRectangle(pShip, radar) && this.readyLauncher){
-                    if (this.x <= pShip.x) {
-                    	this.rotation = Math.PI/2;
-                    	this.eFire();
-                    } else {
-                    	this.rotation = 3*(Math.PI/2);
-                    	this.eFire();
-                    }
+            if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+                if (this.x <= pShip.x) {
+                    this.rotation = Math.PI/2;
+                    this.eFire();
+                } else {
+                    this.rotation = 3*(Math.PI/2);
+                    this.eFire();
+                }
+            }            
+            meteors.some(function(meteor){
+                if(hitTestRectangle(meteor, radar)){
+                    this.eFire();
                 }
             }.bind(this));
+                
+        }.bind(this));
     }
     
     hit(bullet) {
@@ -431,19 +458,24 @@ class Enemy2 extends Enemy{
     }
 	
 	radar(){
-    	this.radars.filter(function(radar){
-                if(hitTestRectangle(pShip, radar) && this.readyLauncher){
-                    if (this.y <= pShip.y) {
-                    	this.rotation = Math.PI;
-                    	this.eFire();
-                    } else {
-                    	this.rotation = 0;
-                    	this.eFire();
-                    }
+    	this.radars.forEach(function(radar){
+            if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+                if (this.y <= pShip.y) {
+                    this.rotation = Math.PI;
+                    this.eFire();
+                } else {
+                    this.rotation = 0;
+                    this.eFire();
                 }
+            }
                 
-                return true;
+            meteors.some(function(meteor){
+                if(hitTestRectangle(meteor, radar)){
+                    this.eFire();
+                }
             }.bind(this));
+                
+        }.bind(this));
     }
     
     hit(bullet) {
@@ -511,7 +543,8 @@ function game(){
     var meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
     var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002.png");
     
-    var breakerTexture = new PIXI.Texture.fromImage(path + "powerupRed_bolt.png");
+    var breakerTexture = new PIXI.Texture.fromImage(path + "bolt_bronze.png");
+    var catcherTexture = new PIXI.Texture.fromImage(path + "things_bronze.png");
     
     var breakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_009.png");
     var breakEffect1 = new PIXI.Texture.fromImage(path + "spaceEffects_011.png");
@@ -555,6 +588,8 @@ function game(){
     eDeathItems.push(eDeathItem1);
     eDeathItems.push(eDeathItem2);
     eDeathItems.push(eDeathItem3);
+    
+    var transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
 
     
     bg = new PIXI.Sprite(bgTexture);
@@ -598,9 +633,9 @@ function game(){
     
     var breakerButton = new PIXI.Sprite(breakerTexture);
     breakerButton.x = 9 * xStep + 0.25 * xStep;
-    breakerButton.y = 0 * yStep + 0.375 * yStep;
-    breakerButton.width = xStep;
-    breakerButton.height = yStep / 2;
+    breakerButton.y = 0 * yStep + 0.5 * xStep;
+    breakerButton.width = xStep / 4;
+    breakerButton.height = xStep / 2;
     breakerButton.anchor.set(0.5);
     breakerButton.alpha = 0.3;
     breakerButton.buttonMode = true;
@@ -610,9 +645,26 @@ function game(){
             .on('mouseup', releaseMeteor)
             .on('touchstart', breakMeteor)
             .on('touchend', releaseMeteor);
-               
+            
     app.stage.addChild(breakerButton);
-    
+            
+    var catcherButton = new PIXI.Sprite(catcherTexture);
+    catcherButton.x = 8 * xStep + 0.25 * xStep;
+    catcherButton.y = 0 * yStep + 0.5 * xStep;
+    catcherButton.width = xStep / 4;
+    catcherButton.height = xStep / 2;
+    catcherButton.anchor.set(0.5);
+    catcherButton.alpha = 0.3;
+    catcherButton.count = 0;
+    catcherButton.buttonMode = true;
+    catcherButton.interactive = true;
+    catcherButton
+            .on('mousedown', catchMeteor)
+            .on('mouseup', leaveMeteor)
+            .on('touchstart', catchMeteor)
+            .on('touchend', leaveMeteor);
+               
+    app.stage.addChild(catcherButton);    
     
     for(var i = 0; i < matrix.length; i++){
         for(var j = 0; j < matrix[0].length; j++){
@@ -623,7 +675,7 @@ function game(){
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.s = Math.PI/180;
-                
+                meteor.state = "free";
                 meteor.calculateRotParams();
                 
                 meteors.push(meteor);
@@ -636,7 +688,7 @@ function game(){
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.s = -Math.PI/180;
-                
+
                 meteor.calculateRotParams();
                 
                 meteors.push(meteor);
@@ -651,6 +703,7 @@ function game(){
                 pShip.y = i * yStep + 0.5 * xStep;
                 pShip.bulletTextures["energyBullet"] = playerEnergyBulletTexture;
                 pShip.effectTextures["breakEffect"] =  shipBreakEffect;
+                pShip.effectTextures["transportMeteorEffect"] = transportMeteorItem;
                 pShip.deathItemsTextures = pDeathItems;
                 app.stage.addChild(pShip);            
             }
@@ -733,7 +786,9 @@ function game(){
     
     setInterval(function(){
         meteors.forEach(function(meteor){
-        	meteor.move();
+            if(meteor.state == "free"){
+        	    meteor.move();
+        	}
             /*meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
             rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);*/
         });
@@ -749,13 +804,19 @@ function game(){
             var ret = true;
             
             if(hitTestRectangle(meteor, pShip)){
-                pShip.x += pShip.speedX * Math.sin(pShip.rotation + Math.PI);
-                pShip.y -= pShip.speedY * Math.cos(pShip.rotation + Math.PI);
-                meteor.x += pShip.speedX * Math.sin(pShip.rotation);
-                meteor.y -= pShip.speedY * Math.cos(pShip.rotation);
-                pShip.energy--;  
-                ret = true;                
+                pShip.x -= pShip.speedX * Math.sin(pShip.rotation);
+                pShip.y += pShip.speedY * Math.cos(pShip.rotation);
+                pShip.energy -= 5 / 60;
+                ret = true;                  
             }
+            eShips.forEach(function(eShip){
+                if(hitTestRectangle(meteor, eShip)){
+                    eShip.x -= eShip.speedX * Math.sin(eShip.rotation);
+                    eShip.y += eShip.speedY * Math.cos(eShip.rotation);
+                    eShip.energy -= 5 / 60;
+                    ret = true;                  
+                }                
+            });    
             
             /*if(contain1(meteor, windowBounds) contain(meteor, windowBounds) != undefined){
                 //app.stage.removeChild(meteor);
@@ -837,6 +898,7 @@ function game(){
             pShip.death();
             pShip.alive = false;
         }
+        
     });
 }
 
@@ -866,17 +928,20 @@ function touchMove(event){
 		this.curX = this.data.getLocalPosition(this.parent).x;
 		this.curY = this.data.getLocalPosition(this.parent).y;
 		if (this.curX - this.startX > 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)) {
-			pShip.move(3)
+			pShip.move(3);
+			pShip.moveItems(3);
 	    }
 	    if(this.curX - this.startX < 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)){
-		    pShip.move(4);				
+		    pShip.move(4);
+		    pShip.moveItems(4);				
 		}
 		if(this.curY - this.startY > 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
-			pShip.move(1);						
+			pShip.move(1);
+			pShip.moveItems(1);						
 		}
 		if(this.curY - this.startY < 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
 		    pShip.move(2);
-							
+			pShip.moveItems(2);				
 		}
 	}
 }
@@ -890,8 +955,7 @@ function breakMeteor(event){
     
     meteors = meteors.filter(function(meteor){
         var distance = calculateDistance(breakerLoc, meteor);
-        if((distance < xStep / 2 || distance < yStep / 2) && !hitTestRectangle(pShip, meteor)){
-        
+        if((distance < xStep / 2 || distance < yStep / 2) && meteor.status == "free" && !hitTestRectangle(pShip, meteor)){
             bg.interactive = false;
             bg.buttonMode = false;
             
@@ -925,6 +989,55 @@ function breakMeteor(event){
 }
 
 function releaseMeteor(){
+
+    this.data = null;
+    this.flag = false;
+
+}
+
+function catchMeteor(event){
+
+    this.data = event.data;
+    this.flag = true;
+    console.log(this.count);
+    breakerLoc = pShip.getBreakerLoc();
+    meteors.forEach(function(meteor){
+        var distance = calculateDistance(breakerLoc, meteor);
+        if((distance < xStep / 2 || distance < yStep / 2) && !hitTestRectangle(pShip, meteor)){
+            if(this.count == 0){
+                this.count++;
+                console.log("catch");
+                meteor.state = "catched";
+                pShip.itemList["catchedMeteor"] = meteor;
+                pShip.itemList["catchedMeteor"].distance = distance;
+                var catchItem = new PIXI.Sprite(pShip.effectTextures["transportMeteorEffect"]);
+                catchItem.x = breakerLoc.x;
+                catchItem.y = breakerLoc.y;
+                catchItem.width = distance;
+                catchItem.height = distance;
+                catchItem.anchor.set(0.5);
+                catchItem.rotation = pShip.rotation;
+                pShip.itemList["catchItem"] = catchItem;
+                pShip.itemList["catchItem"].distance = 0;
+                app.stage.addChild(catchItem);            
+            
+            }else{
+                this.count--;
+                meteor.state = "free";
+                pShip.itemList["catchedMeteor"] = null;
+                app.stage.removeChild(pShip.itemList["catchItem"]);
+                pShip.itemList["catchItem"] = null;
+            }
+            
+        }else{
+            console.log("fuck");
+        }
+        
+    }.bind(this));
+
+}
+
+function leaveMeteor(){
 
     this.data = null;
     this.flag = false;
