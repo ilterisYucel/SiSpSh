@@ -792,7 +792,7 @@ function game(){
             /*meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
             rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);*/
         });
-    }, 100);
+    }, 1000);
     
     app.ticker.add(function(){
         
@@ -1023,6 +1023,7 @@ function catchMeteor(event){
             
             }else{
                 this.count--;
+                meteor.calculateRotParams();
                 meteor.state = "free";
                 pShip.itemList["catchedMeteor"] = null;
                 app.stage.removeChild(pShip.itemList["catchItem"]);
