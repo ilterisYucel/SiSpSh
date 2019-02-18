@@ -128,8 +128,8 @@ class playerShip extends Ship{
         var breakerLoc = this.getBreakerLoc();
         Object.values(this.itemList).forEach(function(obj){
                 if(obj){
-                    obj.rotation = this.rotation;
-                    obj.x = breakerLoc.x + obj.distance * Math.sin(obj.rotation);
+                    //obj.rotation = this.rotation;
+                    obj.x = breakerLoc.x + obj.distance * Math.sin(this.rotation);
                     obj.y = breakerLoc.y - obj.distance * Math.cos(this.rotation); 
                 }
         }.bind(this));
@@ -786,6 +786,7 @@ function game(){
     
     setInterval(function(){
         meteors.forEach(function(meteor){
+        	meteor.rotation = (meteor.rotation + 13 * meteor.s) % (Math.PI*2);
             if(meteor.state == "free"){
         	    meteor.move();
         	}
