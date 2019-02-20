@@ -239,6 +239,12 @@ class Enemy extends Ship{
     	this.energy -= bullet.effect;
     }
     
+    collide(meteor) {
+    	this.x -= this.speedX * Math.sin(this.rotation);
+        this.y += this.speedY * Math.cos(this.rotation);
+        this.energy -= 5 / 60;
+    }
+    
     death(){
         this.deathItemsTextures.forEach(function(texture){
             var sprite = new PIXI.Sprite(texture);
@@ -518,6 +524,101 @@ class Enemy2 extends Enemy{
     }
 }
 
+class Enemy3 extends Enemy{
+	constructor(texture, energy = 50, factor = 1, itemList = [], 
+                    bulletTextures = {}, deathItemsTextures = [], effectTextures={}, radars = []){
+    	super(texture,energy,factor,itemList,bulletTextures,deathItemsTextures,effectTextures,radars);
+    	this.status = "Normal";
+    	this.readyPhaser = true;
+    }
+	
+	move(){
+		if(contain(this, windowBounds) == undefined) {
+			if (Math.random() < 0.01) {
+				this.rotation = this.rotation + Math.random() > 0.5 ? (Math.PI/2) : (Math.PI/-2);
+				this.radars[0].rotation = this.rotation;
+			} else {
+				this.y -= this.speedY * Math.cos(this.rotation);
+				this.x += this.speedX * Math.sin(this.rotation);
+			}
+		}
+		else {
+			this.y += this.speedY * Math.cos(this.rotation);
+			this.x -= this.speedX * Math.sin(this.rotation);
+			this.rotation += Math.random() > 0.5 ? (Math.PI/2) : (Math.PI/-2);
+			this.radars[0].rotation = this.rotation;
+		}
+		this.radars[0].x = this.x + xStep * 0.2 * Math.sin(this.rotation);
+		this.radars[0].y = this.y - yStep * 0.2 * Math.cos(this.rotation);
+	}
+	
+	phase(time = 3000, recharge = 1000){
+		if (this.readyPhaser) {
+			this.readyPhaser = false;
+			this.status = "Phased";
+			this.alpha = 0.5;
+			//this.blendMode = PIXI.BLEND_MODES.SCREEN;
+			setTimeout(function() {
+				this.status = "Normal";
+				//this.blendMode = PIXI.BLEND_MODES.NORMAL;
+				this.alpha = 1;
+			}.bind(this),time);
+			setTimeout(function() {
+				this.readyPhaser = true;
+			}.bind(this),time+recharge);
+		}
+	}
+	
+	radar() {
+		if (hitTestRectangle(pShip, this.radars[0]) && this.readyLauncher) {
+			var tempRotation = this.rotation;
+            this.rotation = Math.PI/2 + /*tempRotation +*/ calculateSlope(pShip, this);
+            this.eFire();
+            //this.factor = 1;
+            this.rotation = tempRotation;
+		}
+		
+		if (this.status !== "Phased") {
+			meteors.some(function(meteor){
+		        if(hitTestRectangle(meteor, this.radars[0])){
+		            this.phase();
+		        }
+		    }.bind(this));
+		    
+		    pBullets.some(function(bullet){
+		    	if(hitTestRectangle(bullet, this.radars[0])){
+		            this.phase();
+		        }
+		    }.bind(this));
+        }
+	}
+	
+	hit(bullet) {
+		if (this.status !== "Phased") {
+			super.hit(bullet);
+			console.log("Hit!");
+			this.phase();
+		} else {
+			return true;
+		}
+	}
+	
+	collide(meteor) {
+		if (this.status !== "Phased") {
+			this.x -= this.speedX * Math.sin(this.rotation);
+		    this.y += this.speedY * Math.cos(this.rotation);
+		    this.energy -= 5 / 60;
+		    this.phase();
+		}
+    }
+    
+    controlStatus(){
+        this.intervalId = setInterval(function(){
+            this.readyLauncher = true;
+        }.bind(this),1000);
+    }
+}
+
 function calculateRotationParams() {
 	rotationParams.o = {
 		x : (rotationParams.f0.x + rotationParams.f1.x) / 2,
@@ -541,7 +642,8 @@ function game(){
     var playerEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_010.png");
     var enemyEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_011.png");
     var meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
-    var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002.png");
+    var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002b.png");
+    var shipTexture2 = new PIXI.Texture.fromImage(path + "spaceShips_003b.png");
     
     var breakerTexture = new PIXI.Texture.fromImage(path + "bolt_bronze.png");
     var catcherTexture = new PIXI.Texture.fromImage(path + "things_bronze.png");
@@ -774,7 +876,29 @@ function game(){
                 
                 enemy.radars.push(frontRadar);
                 enemy.radars.push(endRadar);     
-            }    
+            } else if(matrix[i][j] == '3'){
+            	var enemy = new Enemy3(shipTexture2);
+                enemy.width = xStep;
+                enemy.height = xStep;
+                enemy.x = j * xStep + 0.5 * xStep;
+                enemy.y = i * yStep + 0.5 * xStep;
+                var rand = Math.random();
+                enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
+                enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+                enemy.deathItemsTextures = eDeathItems;
+                eShips.push(enemy);
+                app.stage.addChild(enemy);
+                
+                var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+                frontRadar.width = xStep * 1.5;
+                frontRadar.height = xStep * 1.2;
+                frontRadar.x = enemy.x;
+                frontRadar.y = enemy.y + 1.5 * yStep;
+                frontRadar.alpha = 0.5;
+                radars.push(frontRadar);
+                app.stage.addChild(frontRadar);
+                enemy.radars.push(frontRadar);
+            }
         }
     }
     
@@ -812,10 +936,8 @@ function game(){
             }
             eShips.forEach(function(eShip){
                 if(hitTestRectangle(meteor, eShip)){
-                    eShip.x -= eShip.speedX * Math.sin(eShip.rotation);
-                    eShip.y += eShip.speedY * Math.cos(eShip.rotation);
-                    eShip.energy -= 5 / 60;
-                    ret = true;                  
+                    eShip.collide(meteor);
+                    ret = true;       
                 }                
             });    
             
@@ -840,9 +962,13 @@ function game(){
             
             eShips.forEach(function(eShip){
                 if(hitTestRectangle(eShip, bullet)){
-                    eShip.hit(bullet);
-                    app.stage.removeChild(bullet);
-                    ret = false;
+                    ret = eShip.hit(bullet);
+                    if (ret == undefined) {
+                    	ret = false;
+                    }
+                    if (ret === false) {
+                    	app.stage.removeChild(bullet);
+                    }
                 }
             });
             
