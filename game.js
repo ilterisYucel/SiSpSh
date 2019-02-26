@@ -776,7 +776,7 @@ function game(){
                 meteor.y = i * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
-                meteor.s = Math.PI/180;
+                meteor.s = Math.PI/3600;
                 meteor.state = "free";
                 meteor.calculateRotParams();
                 
@@ -789,7 +789,7 @@ function game(){
                 meteor.y = i * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
-                meteor.s = -Math.PI/180;
+                meteor.s = -Math.PI/3600;
 
                 meteor.calculateRotParams();
                 
@@ -908,17 +908,6 @@ function game(){
         enemy.controlStatus();
     });
     
-    setInterval(function(){
-        meteors.forEach(function(meteor){
-        	meteor.rotation = (meteor.rotation + 13 * meteor.s) % (Math.PI*2);
-            if(meteor.state == "free"){
-        	    meteor.move();
-        	}
-            /*meteor.loc = (meteor.loc + Math.PI / 360) % (Math.PI * 2);
-            rotateElliptic(meteor, rotationCenter.x, rotationCenter.y, meteor.a,  meteor.b, meteor.loc);*/
-        });
-    }, 1000);
-    
     app.ticker.add(function(){
         
         if(pShip.alive){
@@ -927,6 +916,11 @@ function game(){
         
         meteors = meteors.filter(function(meteor){
             var ret = true;
+            
+            meteor.rotation = (meteor.rotation + 13 * meteor.s) % (Math.PI*2);
+            if(meteor.state == "free"){
+        	    meteor.move();
+        	}
             
             if(hitTestRectangle(meteor, pShip)){
                 pShip.x -= pShip.speedX * Math.sin(pShip.rotation);
