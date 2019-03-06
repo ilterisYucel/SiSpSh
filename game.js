@@ -242,7 +242,8 @@ class Enemy extends Ship{
     collide(meteor) {
     	this.x -= this.speedX * Math.sin(this.rotation);
         this.y += this.speedY * Math.cos(this.rotation);
-        this.energy -= 5 / 60;
+        this.energy -= meteor.damage / 60;
+        meteor.strengh -= meteor.damage / 60;
     }
     
     death(){
@@ -285,6 +286,8 @@ class Meteor extends PIXI.Sprite{
         super(texture);
         this.breakItemList = breakItemList;
         this.anchor.set(0.5);
+        this.strength = 20;
+        this.damage = 5;
         this.t = 0;
         this.a = 0;
         this.b = 0;
@@ -389,7 +392,13 @@ class Enemy1 extends Enemy{
             }            
             meteors.some(function(meteor){
                 if(hitTestRectangle(meteor, radar)){
-                    this.eFire();
+                    if (this.x <= meteor.x) {
+                        this.rotation = Math.PI/2;
+                        this.eFire();
+                    } else {
+                        this.rotation = 3*(Math.PI/2);
+                        this.eFire();
+                    }
                 }
             }.bind(this));
                 
@@ -477,7 +486,13 @@ class Enemy2 extends Enemy{
                 
             meteors.some(function(meteor){
                 if(hitTestRectangle(meteor, radar)){
-                    this.eFire();
+                    if (this.y <= meteor.y) {
+                        this.rotation = Math.PI;
+                        this.eFire();
+                    } else {
+                        this.rotation = 0;
+                        this.eFire();
+                    }
                 }
             }.bind(this));
                 
@@ -607,7 +622,8 @@ class Enemy3 extends Enemy{
 		if (this.status !== "Phased") {
 			this.x -= this.speedX * Math.sin(this.rotation);
 		    this.y += this.speedY * Math.cos(this.rotation);
-		    this.energy -= 5 / 60;
+		    this.energy -= meteor.damage / 60;
+		    meteor.strengh -= meteor.damage / 60;
 		    this.phase();
 		}
     }
@@ -711,62 +727,7 @@ function game(){
     
     app.stage.addChild(bg);
     
-    energyCounter = new PIXI.Container();
-    energyCounter.position.set(xStep / 2, 0.375 * yStep );
-    app.stage.addChild(energyCounter);
-    
-    var graphic = new PIXI.Graphics();
-    graphic.beginFill(0x343b3d, 0.5);
-    graphic.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
-    graphic.drawRoundedRect(0, 0, 2 * xStep, yStep / 4, 10);
-    graphic.endFill();
-    energyCounter.addChild(graphic);
-    
-    energyStep = xStep / 50;
-    
-    var graphic1 = new PIXI.Graphics();
-    graphic1.beginFill(0xac3939, 0.5);
-    //energyCounter.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
-    graphic1.drawRoundedRect(0, 0, xStep, yStep / 4, 10);
-    graphic1.endFill();
-    energyCounter.addChild(graphic1);
-    
-    energyCounter.counter = graphic1;
-    
-    var breakerButton = new PIXI.Sprite(breakerTexture);
-    breakerButton.x = 9 * xStep + 0.25 * xStep;
-    breakerButton.y = 0 * yStep + 0.5 * xStep;
-    breakerButton.width = xStep / 4;
-    breakerButton.height = xStep / 2;
-    breakerButton.anchor.set(0.5);
-    breakerButton.alpha = 0.3;
-    breakerButton.buttonMode = true;
-    breakerButton.interactive = true;
-    breakerButton
-            .on('mousedown', breakMeteor)
-            .on('mouseup', releaseMeteor)
-            .on('touchstart', breakMeteor)
-            .on('touchend', releaseMeteor);
-            
-    app.stage.addChild(breakerButton);
-            
-    var catcherButton = new PIXI.Sprite(catcherTexture);
-    catcherButton.x = 8 * xStep + 0.25 * xStep;
-    catcherButton.y = 0 * yStep + 0.5 * xStep;
-    catcherButton.width = xStep / 4;
-    catcherButton.height = xStep / 2;
-    catcherButton.anchor.set(0.5);
-    catcherButton.alpha = 0.3;
-    catcherButton.count = 0;
-    catcherButton.buttonMode = true;
-    catcherButton.interactive = true;
-    catcherButton
-            .on('mousedown', catchMeteor)
-            .on('mouseup', leaveMeteor)
-            .on('touchstart', catchMeteor)
-            .on('touchend', leaveMeteor);
-               
-    app.stage.addChild(catcherButton);    
+   
     
     for(var i = 0; i < matrix.length; i++){
         for(var j = 0; j < matrix[0].length; j++){
@@ -777,9 +738,8 @@ function game(){
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.s = Math.PI/3600;
-                meteor.state = "free";
                 meteor.calculateRotParams();
-                
+                meteor.state = "free";
                 meteors.push(meteor);
                 
                 app.stage.addChild(meteor);
@@ -792,7 +752,7 @@ function game(){
                 meteor.s = -Math.PI/3600;
 
                 meteor.calculateRotParams();
-                
+                meteor.state = "free";
                 meteors.push(meteor);
                 
                 app.stage.addChild(meteor);
@@ -902,6 +862,65 @@ function game(){
         }
     }
     
+    energyCounter = new PIXI.Container();
+    energyCounter.position.set(xStep / 2, 0.375 * yStep );
+    app.stage.addChild(energyCounter);
+    
+    var graphic = new PIXI.Graphics();
+    graphic.beginFill(0x343b3d, 0.5);
+    graphic.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
+    graphic.drawRoundedRect(0, 0, 2 * xStep, yStep / 4, 10);
+    graphic.endFill();
+    energyCounter.addChild(graphic);
+    
+    energyStep = xStep / 50;
+    
+    var graphic1 = new PIXI.Graphics();
+    graphic1.beginFill(0xac3939, 0.5);
+    //energyCounter.lineStyle(Math.ceil(yStep / 40), 0xeeeeee, 0.5);
+    graphic1.drawRoundedRect(0, 0, xStep, yStep / 4, 10);
+    graphic1.endFill();
+    energyCounter.addChild(graphic1);
+    
+    energyCounter.counter = graphic1;
+    
+    var breakerButton = new PIXI.Sprite(breakerTexture);
+    breakerButton.x = 9 * xStep + 0.25 * xStep;
+    breakerButton.y = 0 * yStep + 0.5 * xStep;
+    breakerButton.width = xStep / 4;
+    breakerButton.height = xStep / 2;
+    breakerButton.anchor.set(0.5);
+    breakerButton.alpha = 0.3;
+    breakerButton.buttonMode = true;
+    breakerButton.interactive = true;
+    breakerButton.rotation = Math.PI / 2;
+    breakerButton
+            .on('mousedown', breakMeteor)
+            .on('mouseup', releaseMeteor)
+            .on('touchstart', breakMeteor)
+            .on('touchend', releaseMeteor);
+            
+    app.stage.addChild(breakerButton);
+            
+    var catcherButton = new PIXI.Sprite(catcherTexture);
+    catcherButton.x = 8 * xStep + 0.25 * xStep;
+    catcherButton.y = 0 * yStep + 0.5 * xStep;
+    catcherButton.width = xStep / 4;
+    catcherButton.height = xStep / 2;
+    catcherButton.anchor.set(0.5);
+    catcherButton.alpha = 0.3;
+    catcherButton.count = 0;
+    catcherButton.buttonMode = true;
+    catcherButton.interactive = true;
+    catcherButton.rotation = Math.PI / 2;
+    catcherButton
+            .on('mousedown', catchMeteor)
+            .on('mouseup', leaveMeteor)
+            .on('touchstart', catchMeteor)
+            .on('touchend', leaveMeteor);
+               
+    app.stage.addChild(catcherButton); 
+    
     pShip.controlStatus();
     
     eShips.forEach(function(enemy){
@@ -917,15 +936,21 @@ function game(){
         meteors = meteors.filter(function(meteor){
             var ret = true;
             
-            meteor.rotation = (meteor.rotation + 13 * meteor.s) % (Math.PI*2);
+            if(meteor.strength <= 0){
+                app.stage.removeChild(meteor);
+                ret = false;
+            }
+            
             if(meteor.state == "free"){
         	    meteor.move();
+        	    meteor.rotation = (meteor.rotation + 13 * meteor.s) % (Math.PI*2);
         	}
             
             if(hitTestRectangle(meteor, pShip)){
                 pShip.x -= pShip.speedX * Math.sin(pShip.rotation);
                 pShip.y += pShip.speedY * Math.cos(pShip.rotation);
-                pShip.energy -= 5 / 60;
+                pShip.energy -= meteor.damage / 60;
+                meteor.strength -= meteor.damage / 60;
                 ret = true;                  
             }
             eShips.forEach(function(eShip){
@@ -969,6 +994,7 @@ function game(){
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
                     app.stage.removeChild(bullet);
+                    meteor.strength -= bullet.effect;
                     ret = false;
                 }
             });
@@ -995,6 +1021,7 @@ function game(){
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
                     app.stage.removeChild(bullet);
+                    meteor.strength -= bullet.effect;
                     ret = false;
                 }
             });
@@ -1013,6 +1040,8 @@ function game(){
             }
             return true;
         });
+        
+        contain(pShip, windowBounds);
         
         if(pShip.energy <= 0 && pShip.alive){
             app.stage.removeChild(pShip);
@@ -1044,8 +1073,8 @@ function touchEnd(){
 		
 function touchMove(event){
 	
-	if(event.target !== null && this.flag && this.startY >= adLoc / 2 && this.startY < adLoc && 
-                                                                    contain(pShip, windowBounds) == undefined){
+	if(event.target !== null && this.flag && this.startY >= adLoc / 2 && this.startY < adLoc){ 
+                                                                    //contain(pShip, windowBounds) == undefined){
 		this.curX = this.data.getLocalPosition(this.parent).x;
 		this.curY = this.data.getLocalPosition(this.parent).y;
 		if (this.curX - this.startX > 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)) {
@@ -1076,7 +1105,7 @@ function breakMeteor(event){
     
     meteors = meteors.filter(function(meteor){
         var distance = calculateDistance(breakerLoc, meteor);
-        if((distance < xStep / 2 || distance < yStep / 2) && meteor.status == "free" && !hitTestRectangle(pShip, meteor)){
+        if((distance < xStep / 2 || distance < yStep / 2) && !hitTestRectangle(pShip, meteor)){
             bg.interactive = false;
             bg.buttonMode = false;
             
@@ -1095,7 +1124,11 @@ function breakMeteor(event){
                 meteor.breakIt();
                 pShip.energy += 10 * pShip.factor;
                 app.stage.removeChild(shipBreakEffect);
-                
+                if(pShip.itemList["catchItem"]){
+                    app.stage.removeChild(pShip.itemList["catchItem"]);
+                    pShip.itemList["catchedMeteor"] = null;
+                    pShip.itemList["catchItem"] = null;
+                }
                 bg.interactive = true;
                 bg.buttonMode = true;
                 
@@ -1127,7 +1160,6 @@ function catchMeteor(event){
         if((distance < xStep / 2 || distance < yStep / 2) && !hitTestRectangle(pShip, meteor)){
             if(this.count == 0){
                 this.count++;
-                console.log("catch");
                 meteor.state = "catched";
                 pShip.itemList["catchedMeteor"] = meteor;
                 pShip.itemList["catchedMeteor"].distance = distance;
@@ -1144,8 +1176,8 @@ function catchMeteor(event){
             
             }else{
                 this.count--;
-                meteor.calculateRotParams();
                 meteor.state = "free";
+                meteor.calculateRotParams();
                 pShip.itemList["catchedMeteor"] = null;
                 app.stage.removeChild(pShip.itemList["catchItem"]);
                 pShip.itemList["catchItem"] = null;
