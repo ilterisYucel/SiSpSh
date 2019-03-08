@@ -28,6 +28,13 @@ var windowBounds = {
                         height : adLoc
                     };
                     
+var containerBounds = {
+	x : -x,
+	y : -adLoc,
+	width : 3*x,
+	height : 3*adLoc
+};
+                    
 var rotationParams = {
                         f0: {
                         	x : 0.5 * x,
@@ -103,22 +110,35 @@ class playerShip extends Ship{
     
     move(direction){
         if(direction == 1){
+        	console.log("Here");
             this.rotation = Math.PI;
+            if (container.y > -adLoc && this.y + container.y >= adLoc/2) {
+            	container.y -= this.speedY;
+            }
             this.y += this.speedY;
         }
         
         if(direction == 2){
             this.rotation = 0;
+            if (container.y < adLoc && this.y + container.y <= adLoc/2) {
+            	container.y += this.speedY;
+            }
             this.y -= this.speedY;
         }
         
         if(direction == 3){
             this.rotation = Math.PI / 2;
+            if (container.x > -x && this.x + container.x >= x/2) {
+            	container.x -= this.speedX;
+            }
             this.x += this.speedX;
         }
         
         if(direction == 4){
             this.rotation = 3 * Math.PI / 2;
+            if (container.x < x && this.x + container.x <= x/2) {
+            	container.x += this.speedX;
+            }
             this.x -= this.speedX;
         }
         
@@ -142,7 +162,7 @@ class playerShip extends Ship{
             eBullet.height = xStep / 2;
             eBullet.x = this.x;
             eBullet.y = this.y;
-            app.stage.addChild(eBullet);
+            container.addChild(eBullet);
             pBullets.push(eBullet);
             this.readyLauncher = false;
         }
@@ -156,7 +176,7 @@ class playerShip extends Ship{
             sprite.width = xStep / 2;
             sprite.height = xStep / 2;
             sprite.anchor.set(0.5);
-            app.stage.addChild(sprite);
+            container.addChild(sprite);
         }.bind(this));
     }
     
@@ -210,7 +230,7 @@ class Enemy extends Ship{
             eBullet.height = xStep / 2;
             eBullet.x = this.x;
             eBullet.y = this.y;
-            app.stage.addChild(eBullet);
+            container.addChild(eBullet);
             eBullets.push(eBullet);
             this.readyLauncher = false;
         }
@@ -227,7 +247,7 @@ class Enemy extends Ship{
                 }
                 
                 if(this.energy == 0){
-                    app.stage.removeChild(radar);
+                    container.removeChild(radar);
                     return false;
                 }
                 
@@ -254,11 +274,11 @@ class Enemy extends Ship{
             sprite.width = xStep / 2;
             sprite.height = xStep / 2;
             sprite.anchor.set(0.5);
-            app.stage.addChild(sprite);
+            container.addChild(sprite);
         }.bind(this));
         
         this.radars.filter(function(radar){
-        	app.stage.removeChild(radar);
+        	container.removeChild(radar);
             return false;
         });
     }
@@ -306,10 +326,10 @@ class Meteor extends PIXI.Sprite{
             effect.width = this.width;
             effect.height = this.height;
             effect.anchor.set(0.5);
-            app.stage.addChild(effect);
+            container.addChild(effect);
             
             setTimeout(function(){
-                app.stage.removeChild(effect);
+                container.removeChild(effect);
             },200);
         }.bind(this));
     }
@@ -354,7 +374,7 @@ class Meteor extends PIXI.Sprite{
 class Enemy1 extends Enemy{
 
 	move(){
-        if(contain(this, windowBounds) == undefined){
+        if(contain(this, containerBounds) == undefined){
             this.x += this.speedX * Math.sin(this.rotation);
             this.radars.forEach(function(radar){
                 radar.x += this.speedX * Math.sin(this.rotation);
@@ -447,7 +467,7 @@ class Enemy1 extends Enemy{
 class Enemy2 extends Enemy{
 
 	move(){
-        if(contain(this, windowBounds) == undefined){
+        if(contain(this, containerBounds) == undefined){
             this.y -= this.speedY * Math.cos(this.rotation);
             this.radars.forEach(function(radar){
                 radar.y -= this.speedY * Math.cos(this.rotation);
@@ -548,7 +568,7 @@ class Enemy3 extends Enemy{
     }
 	
 	move(){
-		if(contain(this, windowBounds) == undefined) {
+		if(contain(this, containerBounds) == undefined) {
 			if (Math.random() < 0.01) {
 				this.rotation = this.rotation + Math.random() > 0.5 ? (Math.PI/2) : (Math.PI/-2);
 				this.radars[0].rotation = this.rotation;
@@ -727,14 +747,15 @@ function game(){
     
     app.stage.addChild(bg);
     
-   
+	container = new PIXI.Container();
+	app.stage.addChild(container);
     
     for(var i = 0; i < matrix.length; i++){
         for(var j = 0; j < matrix[0].length; j++){
             if(matrix[i][j] == 'M'){
                 var meteor = new Meteor(meteorTexture, breakEffects);
-                meteor.x = j * xStep + 0.5 * xStep;
-                meteor.y = i * yStep + 0.5 * xStep;
+                meteor.x = (j-10) * xStep + 0.5 * xStep;
+                meteor.y = (i-10) * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.s = Math.PI/3600;
@@ -742,11 +763,11 @@ function game(){
                 meteor.state = "free";
                 meteors.push(meteor);
                 
-                app.stage.addChild(meteor);
+                container.addChild(meteor);
             } else if (matrix[i][j] == 'W') {
             	var meteor = new Meteor(meteorTexture, breakEffects);
-                meteor.x = j * xStep + 0.5 * xStep;
-                meteor.y = i * yStep + 0.5 * xStep;
+                meteor.x = (j-10) * xStep + 0.5 * xStep;
+                meteor.y = (i-10) * yStep + 0.5 * xStep;
                 meteor.width = xStep;
                 meteor.height = xStep;
                 meteor.s = -Math.PI/3600;
@@ -755,32 +776,32 @@ function game(){
                 meteor.state = "free";
                 meteors.push(meteor);
                 
-                app.stage.addChild(meteor);
+                container.addChild(meteor);
             }
             else if(matrix[i][j] == 'P'){
                 pShip = new playerShip(shipTexture);
                 pShip.width = xStep;
                 pShip.height = xStep;
-                pShip.x = j * xStep + 0.5 * xStep;
-                pShip.y = i * yStep + 0.5 * xStep;
+                pShip.x = (j-10) * xStep + 0.5 * xStep;
+                pShip.y = (i-10) * yStep + 0.5 * xStep;
                 pShip.bulletTextures["energyBullet"] = playerEnergyBulletTexture;
                 pShip.effectTextures["breakEffect"] =  shipBreakEffect;
                 pShip.effectTextures["transportMeteorEffect"] = transportMeteorItem;
                 pShip.deathItemsTextures = pDeathItems;
-                app.stage.addChild(pShip);            
+                container.addChild(pShip);            
             }
             else if(matrix[i][j] == '1'){
                 var enemy = new Enemy1(shipTexture1);
                 enemy.width = xStep;
                 enemy.height = xStep;
-                enemy.x = j * xStep + 0.5 * xStep;
-                enemy.y = i * yStep + 0.5 * xStep;
+                enemy.x = (j-10) * xStep + 0.5 * xStep;
+                enemy.y = (i-10) * yStep + 0.5 * xStep;
                 enemy.rotation = j > 5 ?  (Math.PI / 2) : (3 * Math.PI / 2);
                 enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
                 enemy.deathItemsTextures = eDeathItems;
                 eShips.push(enemy);
                 
-                app.stage.addChild(enemy);
+                container.addChild(enemy);
                 
                 var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
                 frontRadar.width = xStep * 2;
@@ -789,7 +810,7 @@ function game(){
                 frontRadar.y = enemy.y;
                 frontRadar.alpha = 0.5;
                 radars.push(frontRadar);
-                app.stage.addChild(frontRadar);
+                container.addChild(frontRadar);
                 
                 var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
                 endRadar.width = xStep * 2;
@@ -798,7 +819,7 @@ function game(){
                 endRadar.y = enemy.y;
                 endRadar.alpha = 0.5;
                 radars.push(endRadar);
-                app.stage.addChild(endRadar);
+                container.addChild(endRadar);
                 
                 enemy.radars.push(frontRadar);
                 enemy.radars.push(endRadar);                  
@@ -807,14 +828,14 @@ function game(){
             	var enemy = new Enemy2(shipTexture1);
                 enemy.width = xStep;
                 enemy.height = xStep;
-                enemy.x = j * xStep + 0.5 * xStep;
-                enemy.y = i * yStep + 0.5 * xStep;
+                enemy.x = (j-10) * xStep + 0.5 * xStep;
+                enemy.y = (i-10) * yStep + 0.5 * xStep;
                 enemy.rotation = j > 5 ?  (Math.PI) : 0;
                 enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
                 enemy.deathItemsTextures = eDeathItems;
                 eShips.push(enemy);
                 
-                app.stage.addChild(enemy);
+                container.addChild(enemy);
                 
                 var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
                 frontRadar.width = xStep * 2;
@@ -823,7 +844,7 @@ function game(){
                 frontRadar.y = enemy.y + 1.5 * yStep;
                 frontRadar.alpha = 0.5;
                 radars.push(frontRadar);
-                app.stage.addChild(frontRadar);
+                container.addChild(frontRadar);
                 
                 var endRadar = new Radar(enemyOneRadar, enemy, 0);
                 endRadar.width = xStep * 2;
@@ -832,7 +853,7 @@ function game(){
                 endRadar.y = enemy.y - 1.5 * yStep;
                 endRadar.alpha = 0.5;
                 radars.push(endRadar);
-                app.stage.addChild(endRadar);
+                container.addChild(endRadar);
                 
                 enemy.radars.push(frontRadar);
                 enemy.radars.push(endRadar);     
@@ -840,14 +861,14 @@ function game(){
             	var enemy = new Enemy3(shipTexture2);
                 enemy.width = xStep;
                 enemy.height = xStep;
-                enemy.x = j * xStep + 0.5 * xStep;
-                enemy.y = i * yStep + 0.5 * xStep;
+                enemy.x = (j-10) * xStep + 0.5 * xStep;
+                enemy.y = (i-10) * yStep + 0.5 * xStep;
                 var rand = Math.random();
                 enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
                 enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
                 enemy.deathItemsTextures = eDeathItems;
                 eShips.push(enemy);
-                app.stage.addChild(enemy);
+                container.addChild(enemy);
                 
                 var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
                 frontRadar.width = xStep * 1.5;
@@ -856,7 +877,7 @@ function game(){
                 frontRadar.y = enemy.y + 1.5 * yStep;
                 frontRadar.alpha = 0.5;
                 radars.push(frontRadar);
-                app.stage.addChild(frontRadar);
+                container.addChild(frontRadar);
                 enemy.radars.push(frontRadar);
             }
         }
@@ -937,7 +958,7 @@ function game(){
             var ret = true;
             
             if(meteor.strength <= 0){
-                app.stage.removeChild(meteor);
+                container.removeChild(meteor);
                 ret = false;
             }
             
@@ -974,8 +995,8 @@ function game(){
             var ret = true;
             bullet.move();
             
-            if(contain(bullet, windowBounds) !== undefined){       
-                app.stage.removeChild(bullet);
+            if(contain(bullet, containerBounds) !== undefined){       
+                container.removeChild(bullet);
                 ret = false;
             }
             
@@ -986,14 +1007,14 @@ function game(){
                     	ret = false;
                     }
                     if (ret === false) {
-                    	app.stage.removeChild(bullet);
+                    	container.removeChild(bullet);
                     }
                 }
             });
             
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
-                    app.stage.removeChild(bullet);
+                    container.removeChild(bullet);
                     meteor.strength -= bullet.effect;
                     ret = false;
                 }
@@ -1007,20 +1028,20 @@ function game(){
             var ret = true;
             bullet.move();
             
-            if(contain(bullet, windowBounds) !== undefined){       
-                app.stage.removeChild(bullet);
+            if(contain(bullet, containerBounds) !== undefined){       
+                container.removeChild(bullet);
                 ret =  false;
             }
             
             if(hitTestRectangle(pShip, bullet)){
                 pShip.energy -= bullet.effect;
-                app.stage.removeChild(bullet);
+                container.removeChild(bullet);
                 ret = false;
             }
 
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
-                    app.stage.removeChild(bullet);
+                    container.removeChild(bullet);
                     meteor.strength -= bullet.effect;
                     ret = false;
                 }
@@ -1034,17 +1055,17 @@ function game(){
             eShip.radar();
             
             if(eShip.energy <= 0){
-                app.stage.removeChild(eShip);
+                container.removeChild(eShip);
                 eShip.death();
                 return false;
             }
             return true;
         });
         
-        contain(pShip, windowBounds);
+        contain(pShip, containerBounds);
         
         if(pShip.energy <= 0 && pShip.alive){
-            app.stage.removeChild(pShip);
+            container.removeChild(pShip);
             pShip.death();
             pShip.alive = false;
         }
@@ -1116,16 +1137,16 @@ function breakMeteor(event){
             shipBreakEffect.height = distance;
             shipBreakEffect.anchor.set(0.5);
             shipBreakEffect.rotation = pShip.rotation;
-            app.stage.addChild(shipBreakEffect);
+            container.addChild(shipBreakEffect);
             
             setTimeout(function(){
             
-                app.stage.removeChild(meteor);
+                container.removeChild(meteor);
                 meteor.breakIt();
                 pShip.energy += 10 * pShip.factor;
-                app.stage.removeChild(shipBreakEffect);
+                container.removeChild(shipBreakEffect);
                 if(pShip.itemList["catchItem"]){
-                    app.stage.removeChild(pShip.itemList["catchItem"]);
+                    container.removeChild(pShip.itemList["catchItem"]);
                     pShip.itemList["catchedMeteor"] = null;
                     pShip.itemList["catchItem"] = null;
                 }
@@ -1172,14 +1193,14 @@ function catchMeteor(event){
                 catchItem.rotation = pShip.rotation;
                 pShip.itemList["catchItem"] = catchItem;
                 pShip.itemList["catchItem"].distance = 0;
-                app.stage.addChild(catchItem);            
+                container.addChild(catchItem);            
             
             }else{
                 this.count--;
                 meteor.state = "free";
                 meteor.calculateRotParams();
                 pShip.itemList["catchedMeteor"] = null;
-                app.stage.removeChild(pShip.itemList["catchItem"]);
+                container.removeChild(pShip.itemList["catchItem"]);
                 pShip.itemList["catchItem"] = null;
             }
             
