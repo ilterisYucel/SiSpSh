@@ -110,7 +110,6 @@ class playerShip extends Ship{
     
     move(direction){
         if(direction == 1){
-        	console.log("Here");
             this.rotation = Math.PI;
             if (container.y > -adLoc && this.y + container.y >= adLoc/2) {
             	container.y -= this.speedY;
@@ -788,7 +787,20 @@ function game(){
                 pShip.effectTextures["breakEffect"] =  shipBreakEffect;
                 pShip.effectTextures["transportMeteorEffect"] = transportMeteorItem;
                 pShip.deathItemsTextures = pDeathItems;
-                container.addChild(pShip);            
+                container.addChild(pShip);
+                
+                container.x = x/2 - pShip.x;
+                container.y = adLoc/2 - pShip.y;
+                if (container.x < -x) {
+                	container.x = -x;
+                } else if (container.x > x) {
+                	container.x = x;
+                }
+                if (container.y < -adLoc) {
+                	container.y = -adLoc;
+                } else if (container.y > adLoc) {
+                	container.y = adLoc;
+                }
             }
             else if(matrix[i][j] == '1'){
                 var enemy = new Enemy1(shipTexture1);
