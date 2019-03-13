@@ -727,7 +727,6 @@ function game(){
     eDeathItems.push(eDeathItem3);
     
     var transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
-
     
     bg = new PIXI.Sprite(bgTexture);
     bg.x = 0;
@@ -746,7 +745,7 @@ function game(){
     
     app.stage.addChild(bg);
     
-	container = new PIXI.Container();
+    container = new PIXI.Container();
 	app.stage.addChild(container);
     
     for(var i = 0; i < matrix.length; i++){
@@ -1245,13 +1244,13 @@ function contain(sprite, container){
     	collision = "top";
   	}
 
-  	if (sprite.x + sprite.width / 2 > container.width) {
-    	sprite.x = container.width - sprite.width;
+  	if (sprite.x + sprite.width / 2 > container.width + container.x) {
+    	sprite.x = (container.width + container.x) - sprite.width;
     	collision = "right";
   	}
 
-  	if (sprite.y + sprite.height / 2 > container.height) {
-    	sprite.y = container.height - sprite.height;
+  	if (sprite.y + sprite.height / 2 > container.height + container.y) {
+    	sprite.y = (container.height + container.y) - sprite.height;
     	collision = "bottom";
   	}
 
