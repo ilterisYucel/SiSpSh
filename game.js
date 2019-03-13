@@ -275,21 +275,24 @@ class Enemy extends Ship{
         meteor.y -= yStep * Math.cos(Math.PI + slope);
         meteor.calculateRotParams();
         
-        this.effectTextures["gasEffect"].forEach(function(texture, i){
-            var sprite = new PIXI.Sprite(texture);
-            sprite.x = this.x + (xStep / 2 * Math.sin(Math.PI + slope));
-            sprite.y = this.y - (yStep / 2 * Math.cos(Math.PI + slope));
-            sprite.width = (xStep / 4) * (i + 1);
-            sprite.height = (xStep / 4) * (i + 1);
-            sprite.anchor.set(0.5);
-            container.addChild(sprite);
-            setTimeout(function(){
-                container.removeChild(sprite);
-            },200);
-        }.bind(this));
+        var frame = [];
+        
+        var anim = new PIXI.extras.AnimatedSprite(this.effectTextures["gasEffect"]);
+        
+        anim.x = this.x + (xStep * Math.sin(Math.PI + slope)); 
+        anim.y = this. y - (yStep * Math.cos(Math.PI + slope));
+        anim.anchor.set(0.5);
+        anim.animationSpeed = 0.2;
+        anim.play();
+        
+        container.addChild(anim);
         
         this.energy -= meteor.damage / 60;
         meteor.strengh -= meteor.damage / 60;
+        
+        setTimeout(function(){
+            container.removeChild(anim);
+        },1000);
        
     }
     
@@ -344,8 +347,23 @@ class Meteor extends PIXI.Sprite{
     }
     
     breakIt(){
-       
-        this.breakItemList.forEach(function(texture){
+        var frame = [];
+        
+        var anim = new PIXI.extras.AnimatedSprite(this.breakItemList);
+        
+        anim.x = this.x; 
+        anim.y = this.y;
+        anim.anchor.set(0.5);
+        anim.animationSpeed = 0.2;
+        anim.play();
+        
+        container.addChild(anim);
+        
+        setTimeout(function(){
+            container.removeChild(anim);
+        },1000);
+               
+        /*this.breakItemList.forEach(function(texture){
         
             var effect = new PIXI.Sprite(texture);
             effect.x = this.x;
@@ -358,7 +376,7 @@ class Meteor extends PIXI.Sprite{
             setTimeout(function(){
                 container.removeChild(effect);
             },200);
-        }.bind(this));
+        }.bind(this));*/
     }
     
     calculateRotParams() {
@@ -1203,7 +1221,7 @@ function breakMeteor(event){
                 bg.interactive = true;
                 bg.buttonMode = true;
                 
-            }, 1000);
+            }, 200);
             
             return false;
             
