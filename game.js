@@ -107,6 +107,7 @@ class playerShip extends Ship{
         this.intervalId = 0;
         this.alive = true;
         this.actionStatus = null;
+        this.dir = 0;
     }
     
     move(direction){
@@ -733,7 +734,6 @@ function game(){
     eDeathItems.push(eDeathItem3);
     
     var transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
-
     
     bg = new PIXI.Sprite(bgTexture);
     bg.x = 0;
@@ -752,7 +752,7 @@ function game(){
     
     app.stage.addChild(bg);
     
-	container = new PIXI.Container();
+    container = new PIXI.Container();
 	app.stage.addChild(container);
     
     for(var i = 0; i < matrix.length; i++){
@@ -970,6 +970,8 @@ function game(){
         
         if(pShip.alive){
             energyCounter.counter.width = pShip.energy * energyStep;
+            pShip.move(pShip.dir);
+			pShip.moveItems(pShip.dir);
         }
         
         meteors = meteors.filter(function(meteor){
@@ -1117,6 +1119,7 @@ function touchEnd(){
 	
 	this.flag = false;
 	this.data = null;
+	pShip.dir = 0;
 }
 		
 function touchMove(event){
@@ -1126,20 +1129,16 @@ function touchMove(event){
 		this.curX = this.data.getLocalPosition(this.parent).x;
 		this.curY = this.data.getLocalPosition(this.parent).y;
 		if (this.curX - this.startX > 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)) {
-			pShip.move(3);
-			pShip.moveItems(3);
+			pShip.dir = 3;
 	    }
 	    if(this.curX - this.startX < 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)){
-		    pShip.move(4);
-		    pShip.moveItems(4);				
+		    pShip.dir = 4;				
 		}
 		if(this.curY - this.startY > 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
-			pShip.move(1);
-			pShip.moveItems(1);						
+			pShip.dir = 1;						
 		}
 		if(this.curY - this.startY < 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
-		    pShip.move(2);
-			pShip.moveItems(2);				
+		    pShip.dir = 2;				
 		}
 	}
 }
@@ -1337,13 +1336,13 @@ function contain(sprite, container){
     	collision = "top";
   	}
 
-  	if (sprite.x + sprite.width / 2 > container.width) {
-    	sprite.x = container.width - sprite.width;
+  	if (sprite.x + sprite.width / 2 > container.width + container.x) {
+    	sprite.x = (container.width + container.x) - sprite.width;
     	collision = "right";
   	}
 
-  	if (sprite.y + sprite.height / 2 > container.height) {
-    	sprite.y = container.height - sprite.height;
+  	if (sprite.y + sprite.height / 2 > container.height + container.y) {
+    	sprite.y = (container.height + container.y) - sprite.height;
     	collision = "bottom";
   	}
 
