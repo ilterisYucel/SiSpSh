@@ -261,15 +261,36 @@ class Enemy extends Ship{
     }
     
     collide(meteor) {
+
         var slope = Math.PI / 2 + calculateSlope(this, meteor);
-    	this.x += this.speedX * Math.sin(slope);
+        
+        this.x += this.speedX * Math.sin(slope);
         this.y -= this.speedY * Math.cos(slope);
         this.radars.forEach(function(radar){
             radar.x += this.speedX * Math.sin(slope);
             radar.y -= this.speedY * Math.cos(slope);
         }.bind(this));
+        
+    	meteor.x += xStep * Math.sin(Math.PI + slope);
+        meteor.y -= yStep * Math.cos(Math.PI + slope);
+        meteor.calculateRotParams();
+        
+        this.effectTextures["gasEffect"].forEach(function(texture, i){
+            var sprite = new PIXI.Sprite(texture);
+            sprite.x = this.x + (xStep / 2 * Math.sin(Math.PI + slope));
+            sprite.y = this.y - (yStep / 2 * Math.cos(Math.PI + slope));
+            sprite.width = (xStep / 4) * (i + 1);
+            sprite.height = (xStep / 4) * (i + 1);
+            sprite.anchor.set(0.5);
+            container.addChild(sprite);
+            setTimeout(function(){
+                container.removeChild(sprite);
+            },200);
+        }.bind(this));
+        
         this.energy -= meteor.damage / 60;
         meteor.strengh -= meteor.damage / 60;
+       
     }
     
     death(){
@@ -416,7 +437,7 @@ class Enemy1 extends Enemy{
                     this.eFire();
                 }
             }            
-            meteors.some(function(meteor){
+            /*meteors.some(function(meteor){
                 if(hitTestRectangle(meteor, radar)){
                     if (this.x <= meteor.x) {
                         this.rotation = Math.PI/2;
@@ -426,7 +447,7 @@ class Enemy1 extends Enemy{
                         this.eFire();
                     }
                 }
-            }.bind(this));
+            }.bind(this));*/
                 
         }.bind(this));
     }
@@ -510,7 +531,7 @@ class Enemy2 extends Enemy{
                 }
             }
                 
-            meteors.some(function(meteor){
+            /*meteors.some(function(meteor){
                 if(hitTestRectangle(meteor, radar)){
                     if (this.y <= meteor.y) {
                         this.rotation = Math.PI;
@@ -520,7 +541,7 @@ class Enemy2 extends Enemy{
                         this.eFire();
                     }
                 }
-            }.bind(this));
+            }.bind(this));*/
                 
         }.bind(this));
     }
@@ -817,6 +838,7 @@ function game(){
                 enemy.rotation = j > 5 ?  (Math.PI / 2) : (3 * Math.PI / 2);
                 enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
                 enemy.deathItemsTextures = eDeathItems;
+                enemy.effectTextures["gasEffect"] = breakEffects;
                 eShips.push(enemy);
                 
                 container.addChild(enemy);
@@ -851,6 +873,7 @@ function game(){
                 enemy.rotation = j > 5 ?  (Math.PI) : 0;
                 enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
                 enemy.deathItemsTextures = eDeathItems;
+                enemy.effectTextures["gasEffect"] = breakEffects;
                 eShips.push(enemy);
                 
                 container.addChild(enemy);
@@ -1000,7 +1023,7 @@ function game(){
             if(pShip.itemList["catchItem"] && !pShip.itemList["catchedMeteor"] && hitTestRectangle(meteor, pShip.itemList["catchItem"])){
                 meteor.state = "catched";
                 pShip.itemList["catchedMeteor"] = meteor;
-                pShip.itemList["catchedMeteor"].distance = xStep;
+                pShip.itemList["catchedMeteor"].distance = 2 * xStep / 3;
                 ret = true;
             }
             eShips.forEach(function(eShip){
@@ -1044,7 +1067,6 @@ function game(){
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
                     container.removeChild(bullet);
-                    meteor.strength -= bullet.effect;
                     ret = false;
                 }
             });
@@ -1071,7 +1093,6 @@ function game(){
             meteors.forEach(function(meteor){
                 if(hitTestRectangle(meteor, bullet)){
                     container.removeChild(bullet);
-                    meteor.strength -= bullet.effect;
                     ret = false;
                 }
             });
