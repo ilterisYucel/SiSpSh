@@ -106,6 +106,7 @@ class playerShip extends Ship{
         this.readyLauncher = true;
         this.intervalId = 0;
         this.alive = true;
+        this.dir = 0;
     }
     
     move(direction){
@@ -963,6 +964,8 @@ function game(){
         
         if(pShip.alive){
             energyCounter.counter.width = pShip.energy * energyStep;
+            pShip.move(pShip.dir);
+			pShip.moveItems(pShip.dir);
         }
         
         meteors = meteors.filter(function(meteor){
@@ -1101,6 +1104,7 @@ function touchEnd(){
 	
 	this.flag = false;
 	this.data = null;
+	pShip.dir = 0;
 }
 		
 function touchMove(event){
@@ -1110,20 +1114,16 @@ function touchMove(event){
 		this.curX = this.data.getLocalPosition(this.parent).x;
 		this.curY = this.data.getLocalPosition(this.parent).y;
 		if (this.curX - this.startX > 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)) {
-			pShip.move(3);
-			pShip.moveItems(3);
+			pShip.dir = 3;
 	    }
 	    if(this.curX - this.startX < 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)){
-		    pShip.move(4);
-		    pShip.moveItems(4);				
+		    pShip.dir = 4;				
 		}
 		if(this.curY - this.startY > 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
-			pShip.move(1);
-			pShip.moveItems(1);						
+			pShip.dir = 1;						
 		}
 		if(this.curY - this.startY < 0 && Math.abs(this.curX-this.startX)<Math.abs(this.curY-this.startY)){
-		    pShip.move(2);
-			pShip.moveItems(2);				
+		    pShip.dir = 2;				
 		}
 	}
 }
