@@ -1614,7 +1614,7 @@ function playerMotors(beginX, beginY, angle){
     //emitter.addInitialize(new Proton.Velocity(3, Proton.getSpan(300, 320), 'polar'));
 
     emitter.addInitialize(new Proton.Position(new Proton.LineZone(beginX, beginY, beginX, beginY)));
-    emitter.addInitialize(new Proton.Velocity(new Proton.Span(3, 5), angle, 'polar'));
+    emitter.addInitialize(new Proton.Velocity(new Proton.Span(1, 3), angle, 'polar'));
 
     
     emitter.addBehaviour(new Proton.Alpha(0.5, 0));
