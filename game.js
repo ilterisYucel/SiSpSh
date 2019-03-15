@@ -166,15 +166,18 @@ class playerShip extends Ship{
     }
     
     changeDirection(direction){
-        if(this.beforeRotation - this.rotation == 0){
+    	var temp = this.beforeRotation - this.rotation;
+        if(temp == 0){
             return false;
         }
-        else if ((this.beforeRotation - this.rotation) < 0){
+        else if (temp > Math.PI || temp < 0 && temp > -Math.PI){
             return "X";
+        } else {
+        	return "Y";
         }
-        else if((this.beforeRotation - this.rotation) > 0){
+        /*else if((this.beforeRotation - this.rotation) > 0){
             return "Y";
-        }
+        }*/
     }
     
     eFire(){
