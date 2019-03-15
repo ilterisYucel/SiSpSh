@@ -7,7 +7,7 @@ var w = window,
 
 var path = "./assets/images/";
 var level = parseInt(getAllUrlParams().level);
-var pShip, app, bg, energyCounter, counterStep;
+var pShip, app, bg, energyCounter, counterStep, proton;
 var pBullets = [];
 var eBullets = [];
 var eShips = [];
@@ -264,6 +264,8 @@ class Enemy extends Ship{
 
         var slope = Math.PI / 2 + calculateSlope(this, meteor);
         
+        particalEffect(container.x + this.x, container.y + this.y, 360 * (Math.PI / 2 + slope));
+        
         this.x += this.speedX * Math.sin(slope);
         this.y -= this.speedY * Math.cos(slope);
         this.radars.forEach(function(radar){
@@ -274,8 +276,7 @@ class Enemy extends Ship{
     	meteor.x += xStep * Math.sin(Math.PI + slope);
         meteor.y -= yStep * Math.cos(Math.PI + slope);
         meteor.calculateRotParams();
-        
-        var frame = [];
+        /*var frame = [];
         
         var anim = new PIXI.extras.AnimatedSprite(this.effectTextures["gasEffect"]);
         
@@ -285,14 +286,14 @@ class Enemy extends Ship{
         anim.animationSpeed = 0.2;
         anim.play();
         
-        container.addChild(anim);
+        container.addChild(anim);*/
         
         this.energy -= meteor.damage / 60;
         meteor.strengh -= meteor.damage / 60;
         
-        setTimeout(function(){
+        /*setTimeout(function(){
             container.removeChild(anim);
-        },1000);
+        },1000);*/
        
     }
     
@@ -718,6 +719,11 @@ function calculateRotationParams() {
 function game(){
 	calculateRotationParams();
 	
+    proton = new Proton();
+    
+    var renderer = new Proton.PixiRenderer(app.stage);
+    proton.addRenderer(renderer);
+	
     var bgTexture = new PIXI.Texture.from(path + "starfield.png");
     var shipTexture = new PIXI.Texture.from(path + "spaceShips_001.png");
     var playerEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_010.png");
@@ -1138,6 +1144,8 @@ function game(){
             pShip.alive = false;
         }
         
+        proton.update();
+        
     });
 }
 
@@ -1488,6 +1496,29 @@ function rotateElliptic(object, xCentre, yCentre, a, b, i){
 		
 }
 
+function particalEffect(beginX, beginY, angle){
+    
+    var emitter = new Proton.Emitter();
+    
+    emitter.rate = new Proton.Rate(10);
+    
+    emitter.addInitialize(new Proton.Body(path + '/spaceEffects_006.png'));
+    //emitter.addInitialize(new Proton.Radius(1, 12));
+    emitter.addInitialize(new Proton.Life(1));
+    emitter.addInitialize(new Proton.Velocity(3, Proton.getSpan(angle, angle+20), 'polar'));
+
+    //emitter.addBehaviour(new Proton.Color('FFFFFF', 'random'));
+    emitter.addBehaviour(new Proton.Alpha(1, 0));
+    emitter.p.x = beginX;
+    emitter.p.y = beginY;
+    emitter.emit('once');
+    console.log(beginX, beginY, angle);
+
+    proton.addEmitter(emitter);
+
+}
+
+
 function getAllUrlParams(url) {
 
     var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
@@ -1535,13 +1566,6 @@ function getAllUrlParams(url) {
 }
 
 window.onload = function(){
-
-    //console.log(factor);
-    //console.log(adLoc);
-    //console.log(yStep);
-    //console.log(xStep);
-    //console.log(y / xStep);
-    //console.log((x - (0.1 * y)) / yStep);
     
     app = new PIXI.Application(x, y, {backgroundColor : 0xFFFFFF});
     document.body.appendChild(app.view);
