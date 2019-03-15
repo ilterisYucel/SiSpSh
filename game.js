@@ -264,7 +264,7 @@ class Enemy extends Ship{
 
         var slope = Math.PI / 2 + calculateSlope(this, meteor);
         
-        particalEffect(container.x + this.x, container.y + this.y, 360 * (Math.PI / 2 + slope));
+        particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
         
         this.x += this.speedX * Math.sin(slope);
         this.y -= this.speedY * Math.cos(slope);
