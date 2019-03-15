@@ -265,6 +265,7 @@ class Enemy extends Ship{
         var slope = Math.PI / 2 + calculateSlope(this, meteor);
         
         particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
+        meteor.move = Meteor.pushedMoveMaker.bind(meteor)(xStep/10,Math.PI/2+slope,30);
         
         this.x += this.speedX * Math.sin(slope);
         this.y -= this.speedY * Math.cos(slope);
@@ -273,9 +274,9 @@ class Enemy extends Ship{
             radar.y -= this.speedY * Math.cos(slope);
         }.bind(this));
         
-    	meteor.x += xStep * Math.sin(Math.PI + slope);
+    	/*meteor.x += xStep * Math.sin(Math.PI + slope);
         meteor.y -= yStep * Math.cos(Math.PI + slope);
-        meteor.calculateRotParams();
+        meteor.calculateRotParams();*/
         /*var frame = [];
         
         var anim = new PIXI.extras.AnimatedSprite(this.effectTextures["gasEffect"]);
@@ -345,6 +346,10 @@ class Meteor extends PIXI.Sprite{
         this.s = 0;
         this.state = "free";
         this.transporter = null;
+        this.moveFrames = 0;
+        
+        // functions
+        this.move = Meteor.defaultMove.bind(this);
     }
     
     breakIt(){
@@ -396,7 +401,7 @@ class Meteor extends PIXI.Sprite{
     	this.a = Math.sqrt(b_2 + c_2);
     }
     
-    move() {
+    static defaultMove() {
     	this.t = (this.t + this.s) % (2*Math.PI);
     	
     	var m_t = {
@@ -408,6 +413,30 @@ class Meteor extends PIXI.Sprite{
     	this.y = m_t.y*rotationParams.cos_e - m_t.x*rotationParams.sin_e + rotationParams.o.y;
     }
     
+    static pushedMoveMaker(speed, direction, frames) {
+    	this.moveFrames = frames;
+    	if (speed.length == frames) {
+    		return function(){
+    			this.x += speed[frames - this.moveFrames] * Math.cos(direction);
+    			this.y += speed[frames - this.moveFrames] * Math.sin(direction);
+    			this.moveFrames--;
+    			if (this.moveFrames <= 0) {
+    				this.calculateRotParams();
+    				this.move = Meteor.defaultMove.bind(this);
+    			}
+    		};
+    	} else {
+    		return function(){
+    			this.x += speed * Math.cos(direction);
+    			this.y += speed * Math.sin(direction);
+    			this.moveFrames--;
+    			if (this.moveFrames <= 0) {
+    				this.calculateRotParams();
+    				this.move = Meteor.defaultMove.bind(this);
+    			}
+    		};
+    	}
+    }
     /*transportedMove(){
         if(this.transporter != null){
             this.x += this.transporter.speedX * Math.sin(this.transporter.rotation);
