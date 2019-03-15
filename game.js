@@ -108,6 +108,7 @@ class playerShip extends Ship{
         this.alive = true;
         this.actionStatus = null;
         this.dir = 0;
+        this.beforeRotation = 0;
     }
     
     move(direction){
@@ -142,6 +143,14 @@ class playerShip extends Ship{
             }
             this.x -= this.speedX;
         }
+        if(this.dir && this.changeDirection() == "Y"){
+            var motor = this.getMotor1();
+            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation + Math.PI/2))
+        }
+        if(this.dir && this.changeDirection() == "X"){
+            var motor = this.getMotor0();
+            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation - Math.PI/2))
+        }
         
     }
     
@@ -154,6 +163,18 @@ class playerShip extends Ship{
                     obj.y = breakerLoc.y - obj.distance * Math.cos(this.rotation); 
                 }
         }.bind(this));
+    }
+    
+    changeDirection(direction){
+        if(this.beforeRotation - this.rotation == 0){
+            return false;
+        }
+        else if ((this.beforeRotation - this.rotation) < 0){
+            return "X";
+        }
+        else if((this.beforeRotation - this.rotation) > 0){
+            return "Y";
+        }
     }
     
     eFire(){
@@ -195,6 +216,38 @@ class playerShip extends Ship{
         else if(this.rotation == 3 * Math.PI / 2){
             return {x : this.x - this.width / 2, y : this.y};
         }
+    }
+    
+    getMotor0(){
+        if(this.rotation == Math.PI){
+            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
+        }
+        
+        else if(this.rotation == 0){
+            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }
+        else if(this.rotation == Math.PI / 2){
+            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
+        }
+        else if(this.rotation == 3 * Math.PI / 2){
+            return {x : this.x - this.width / 2, y : this.y + this.height / 2};
+        }
+    }
+        
+    getMotor1(){
+        if(this.rotation == Math.PI){
+            return {x : this.x - this.width / 2, y : this.y + this.height / 2};
+        }
+        
+        else if(this.rotation == 0){
+            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
+        }
+        else if(this.rotation == Math.PI / 2){
+            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
+        }
+        else if(this.rotation == 3 * Math.PI / 2){
+            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }      
     }
     
     controlStatus(){
@@ -1048,6 +1101,7 @@ function game(){
             energyCounter.counter.width = pShip.energy * energyStep;
             pShip.move(pShip.dir);
 			pShip.moveItems(pShip.dir);
+			//pShip.changeDirection(pShip.dir);
         }
         
         meteors = meteors.filter(function(meteor){
@@ -1204,6 +1258,7 @@ function touchMove(event){
                                                                     //contain(pShip, windowBounds) == undefined){
 		this.curX = this.data.getLocalPosition(this.parent).x;
 		this.curY = this.data.getLocalPosition(this.parent).y;
+		pShip.beforeRotation = pShip.rotation;
 		if (this.curX - this.startX > 0 && Math.abs(this.curX-this.startX)>Math.abs(this.curY-this.startY)) {
 			pShip.dir = 3;
 	    }
@@ -1542,6 +1597,30 @@ function particalEffect(beginX, beginY, angle){
     emitter.p.y = beginY;
     emitter.emit('once');
     console.log(beginX, beginY, angle);
+
+    proton.addEmitter(emitter);
+
+}
+
+function playerMotors(beginX, beginY, angle){
+    
+    var emitter = new Proton.Emitter();
+    
+    emitter.rate = new Proton.Rate(10);
+    
+    emitter.addInitialize(new Proton.Body(path + '/spaceEffects_006.png'));
+    //emitter.addInitialize(new Proton.Radius(1, 12));
+    emitter.addInitialize(new Proton.Life(0.5));
+    //emitter.addInitialize(new Proton.Velocity(3, Proton.getSpan(300, 320), 'polar'));
+
+    emitter.addInitialize(new Proton.Position(new Proton.LineZone(beginX, beginY, beginX, beginY)));
+    emitter.addInitialize(new Proton.Velocity(new Proton.Span(3, 5), angle, 'polar'));
+
+    
+    emitter.addBehaviour(new Proton.Alpha(0.5, 0));
+    emitter.addBehaviour(new Proton.Scale(Proton.getSpan(.1, .3), .7));
+    
+    emitter.emit('once');
 
     proton.addEmitter(emitter);
 
