@@ -145,11 +145,15 @@ class playerShip extends Ship{
         }
         if(this.dir && this.changeDirection() == "Y"){
             var motor = this.getMotor1();
-            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation + Math.PI/2))
+            var motor1 = this.getMotor2();
+            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation + Math.PI/2));
+            playerMotors(motor1.x + container.x, motor1.y + container.y, (180/Math.PI) * (this.rotation - Math.PI/2));
         }
         if(this.dir && this.changeDirection() == "X"){
             var motor = this.getMotor0();
-            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation - Math.PI/2))
+            var motor1 = this.getMotor3();
+            playerMotors(motor.x + container.x, motor.y + container.y, (180/Math.PI) * (this.rotation - Math.PI/2));
+            playerMotors(motor1.x + container.x, motor1.y + container.y, (180/Math.PI) * (this.rotation + Math.PI/2));
         }
         
     }
@@ -250,6 +254,38 @@ class playerShip extends Ship{
         }
         else if(this.rotation == 3 * Math.PI / 2){
             return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }      
+    }
+    
+    getMotor2(){
+        if(this.rotation == Math.PI){
+            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }
+        
+        else if(this.rotation == 0){
+            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
+        }
+        else if(this.rotation == Math.PI / 2){
+            return {x : this.x - this.width / 2, y : this.y + this.height / 2};
+        }
+        else if(this.rotation == 3 * Math.PI / 2){
+            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
+        }      
+    }
+    
+    getMotor3(){
+        if(this.rotation == Math.PI){
+            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }
+        
+        else if(this.rotation == 0){
+            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
+        }
+        else if(this.rotation == Math.PI / 2){
+            return {x : this.x - this.width / 2, y : this.y + this.height / 2};
+        }
+        else if(this.rotation == 3 * Math.PI / 2){
+            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
         }      
     }
     
