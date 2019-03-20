@@ -540,6 +540,11 @@ class Meteor extends PIXI.Sprite{
     death(){
         meteorCrashEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI * 2), 2);
         container.removeChild(this);
+        if (this.state === "catched") {
+        	pShip.uncatch();
+        }
+        this.x = -3*x;
+        this.y = -3*adLoc;
         this.state = "death";
     }
 }
