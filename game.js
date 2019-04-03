@@ -737,8 +737,8 @@ class Enemy3 extends Enemy{
 			this.rotation += Math.random() > 0.5 ? (Math.PI/2) : (Math.PI/-2);
 			this.radars[0].rotation = this.rotation;
 		}
-		this.radars[0].x = this.x + xStep * 0.2 * Math.sin(this.rotation);
-		this.radars[0].y = this.y - yStep * 0.2 * Math.cos(this.rotation);
+		this.radars[0].x = this.x + xStep * 0.3 * Math.sin(this.rotation);
+		this.radars[0].y = this.y - yStep * 0.3 * Math.cos(this.rotation);
 	}
 	
 	phase(time = 3000, recharge = 1000){
@@ -809,6 +809,196 @@ class Enemy3 extends Enemy{
     }
 }
 
+class Enemy4 extends Enemy{
+	constructor(texture, energy = 50, factor = 1, itemList = [], bulletTextures = {}, deathItemsTextures = [], effectTextures={}, radars = []){
+    	super(texture,energy,factor,itemList,bulletTextures,deathItemsTextures,effectTextures,radars);
+    	this.move = Enemy4.defaultMove.bind(this);
+    	this.collide = Enemy4.defaultCollide.bind(this);
+    	this.hit = Enemy4.defaultHit.bind(this);
+    	this.radar = Enemy4.defaultRadar.bind(this);
+	}
+	
+	static defaultMove() {
+        if(contain(this, containerBounds) == undefined){
+        	if (this.rotation == Math.PI || this.rotation == 0) {
+        		console.log("Y:" + this.y);
+            	this.y -= this.speedY * Math.cos(this.rotation);
+		        this.radars.forEach(function(radar){
+		            radar.y -= this.speedY * Math.cos(this.rotation);
+		            if (radar.y >= this.y) {
+		            	radar.y = this.y + 1.5 * yStep;
+		            } else {
+		            	radar.y = this.y - 1.5 * yStep;
+		            }
+		        }.bind(this));
+            } else {
+            	console.log("X:" + this.x);
+		        this.x += this.speedX * Math.sin(this.rotation);
+		        this.radars.forEach(function(radar){
+		            radar.x += this.speedX * Math.sin(this.rotation);
+		            if (radar.x >= this.x) {
+		            	radar.x = this.x + 1.5 * xStep;
+		            } else {
+		            	radar.x = this.x - 1.5 * xStep;
+		            }
+		        }.bind(this));
+            }
+        }
+        else{
+            this.rotation = (this.rotation + Math.PI) % (2*Math.PI);
+            if (this.rotation == Math.PI || this.rotation == 0) {
+		        this.y -= this.speedY * Math.cos(this.rotation);
+		        this.radars.forEach(function(radar){
+		            radar.y -= this.speedY * Math.cos(this.rotation);
+		            if (radar.y >= this.y) {
+		            	radar.y = this.y + 1.5 * yStep;
+		            } else {
+		            	radar.y = this.y - 1.5 * yStep;
+		            }
+		        }.bind(this));       
+            } else {
+		        this.x += this.speedX * Math.sin(this.rotation);
+		        this.radars.forEach(function(radar){
+		            radar.x += this.speedX * Math.sin(this.rotation);
+		            if (radar.x >= this.x) {
+		            	radar.x = this.x + 1.5 * xStep;
+		            } else {
+		            	radar.x = this.x - 1.5 * xStep;
+		            }
+		        }.bind(this));
+		    }         
+        }
+    }
+    
+    static lockedMove() {
+    	var diff = {
+    		x : this.x - pShip.x,
+    		y : this.y - pShip.y
+    	};
+    	if (Math.abs(diff.x) < xStep && Math.abs(diff.y) < yStep) {
+    		this.energy = 0;
+    		pShip.energy = 0;
+    		return;
+    	}
+    	if (Math.abs(diff.x) >= Math.abs(diff.y)) {
+    		if (diff.x >= 0) {
+    			this.rotation = 3*(Math.PI/2);
+    			this.x -= this.speedX;
+    		} else {
+    			this.rotation = Math.PI/2;
+    			this.x += this.speedX;
+    		}
+    	} else {
+    		if (diff.y >= 0) {
+    			this.rotation = 0;
+    			this.y -= this.speedY;
+    		} else {
+    			this.rotation = Math.PI;
+    			this.y += this.speedY;
+    		}
+    	}
+    }
+    
+    static defaultCollide(meteor) {
+        var slope = Math.PI / 2 + calculateSlope(this, meteor);
+        
+        if(meteor.state == "free"){
+            particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
+            meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (Math.PI + slope), 1);
+            meteor.move = Meteor.pushedMoveMaker.bind(meteor)(xStep/10,Math.PI/2+slope,30);
+        
+            this.x += this.speedX * Math.sin(slope);
+            this.y -= this.speedY * Math.cos(slope);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(slope);
+                radar.y -= this.speedY * Math.cos(slope);
+            }.bind(this));
+        
+            meteor.strength -= meteor.damage;
+        }
+        
+        else if(meteor.state == "catched"){
+            particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
+            
+            this.x += this.speedX * Math.sin(slope);
+            this.y -= this.speedY * Math.cos(slope);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(slope);
+                radar.y -= this.speedY * Math.cos(slope);
+            }.bind(this));
+            
+            pShip.uncatch();
+            meteor.strength = 0;
+        }
+    }
+    
+    static lockedCollide(meteor) {
+    	var slope = Math.PI / 2 + calculateSlope(this, meteor);
+        
+        if(meteor.state == "free"){
+            particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
+            meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (Math.PI + slope), 1);
+            //meteor.move = Meteor.pushedMoveMaker.bind(meteor)(xStep/10,Math.PI/2+slope,30);
+        
+            this.x += this.speedX * Math.sin(slope);
+            this.y -= this.speedY * Math.cos(slope);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(slope);
+                radar.y -= this.speedY * Math.cos(slope);
+            }.bind(this));
+        	
+        	this.energy = 0;
+            meteor.strength = 0;
+        }
+        
+        else if(meteor.state == "catched"){
+            particalEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope));
+            
+            this.x += this.speedX * Math.sin(slope);
+            this.y -= this.speedY * Math.cos(slope);
+            this.radars.forEach(function(radar){
+                radar.x += this.speedX * Math.sin(slope);
+                radar.y -= this.speedY * Math.cos(slope);
+            }.bind(this));
+            
+            pShip.uncatch();
+            this.energy = 0;
+            meteor.strength = 0;
+        }
+    }
+    
+    static defaultHit(bullet) {
+    	this.move = Enemy4.lockedMove.bind(this);
+    	this.collide = Enemy4.lockedCollide.bind(this);
+    	this.hit = function(){};
+    	this.radar = function(){};
+    	
+    	this.radars.filter(function(radar){
+        	container.removeChild(radar);
+            return false;
+        });
+    }
+    
+    static defaultRadar() {
+    	var flag = false;
+    	this.radars.forEach(function(radar){
+            if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+                this.move = Enemy4.lockedMove.bind(this);
+				this.collide = Enemy4.lockedCollide.bind(this);
+				this.hit = function(){};
+				this.radar = function(){};
+				flag = true;
+            }
+        }.bind(this));
+        if (flag){
+		    this.radars.filter(function(radar){
+		    	container.removeChild(radar);
+		        return false;
+		    });
+        }
+    }
+}
+
 function calculateRotationParams() {
 	rotationParams.o = {
 		x : (rotationParams.f0.x + rotationParams.f1.x) / 2,
@@ -839,6 +1029,7 @@ function game(){
     var meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
     var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002b.png");
     var shipTexture2 = new PIXI.Texture.fromImage(path + "spaceShips_003b.png");
+    var shipTexture3 = new PIXI.Texture.fromImage(path + "spaceShips_004b.png");
     
     var breakerTexture = new PIXI.Texture.fromImage(path + "bolt_bronze.png");
     var catcherTexture = new PIXI.Texture.fromImage(path + "things_bronze.png");
@@ -1052,6 +1243,59 @@ function game(){
                 radars.push(frontRadar);
                 container.addChild(frontRadar);
                 enemy.radars.push(frontRadar);
+            } else if(matrix[i][j] == '4'){
+            	var enemy = new Enemy4(shipTexture3);
+                enemy.width = xStep;
+                enemy.height = xStep;
+                enemy.x = (j-10) * xStep + 0.5 * xStep;
+                enemy.y = (i-10) * yStep + 0.5 * xStep;
+                var rand = Math.random();
+                enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
+                enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+                enemy.deathItemsTextures = eDeathItems;
+                eShips.push(enemy);
+                container.addChild(enemy);
+                
+                if (enemy.rotation == Math.PI || enemy.rotation == 0) {
+                	var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+		            frontRadar.width = xStep * 2;
+		            frontRadar.height = xStep * 2;
+		            frontRadar.x = enemy.x;
+		            frontRadar.y = enemy.y + 1.5 * yStep;
+		            frontRadar.alpha = 0.5;
+		            radars.push(frontRadar);
+		            container.addChild(frontRadar);
+		            
+		            var endRadar = new Radar(enemyOneRadar, enemy, 0);
+		            endRadar.width = xStep * 2;
+		            endRadar.height = xStep * 2;
+		            endRadar.x = enemy.x;
+		            endRadar.y = enemy.y - 1.5 * yStep;
+		            endRadar.alpha = 0.5;
+		            radars.push(endRadar);
+		            container.addChild(endRadar);
+                } else {
+                	var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
+		            frontRadar.width = xStep * 2;
+		            frontRadar.height = xStep * 2;
+		            frontRadar.x = enemy.x + 1.5 * xStep;
+		            frontRadar.y = enemy.y;
+		            frontRadar.alpha = 0.5;
+		            radars.push(frontRadar);
+		            container.addChild(frontRadar);
+		            
+		            var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
+		            endRadar.width = xStep * 2;
+		            endRadar.height = xStep * 2;
+		            endRadar.x = enemy.x - 1.5 * xStep;
+		            endRadar.y = enemy.y;
+		            endRadar.alpha = 0.5;
+		            radars.push(endRadar);
+		            container.addChild(endRadar);
+                }
+                enemy.radars.push(frontRadar);
+                enemy.radars.push(endRadar);       
+                
             }
         }
     }
