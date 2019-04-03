@@ -259,17 +259,17 @@ class playerShip extends Ship{
     
     getMotor2(){
         if(this.rotation == Math.PI){
-            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
         }
         
         else if(this.rotation == 0){
-            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
-        }
-        else if(this.rotation == Math.PI / 2){
             return {x : this.x - this.width / 2, y : this.y + this.height / 2};
         }
+        else if(this.rotation == Math.PI / 2){
+            return {x : this.x - this.width / 2, y : this.y - this.height / 2};
+        }
         else if(this.rotation == 3 * Math.PI / 2){
-            return {x : this.x + this.width / 2, y : this.y - this.height / 2};
+            return {x : this.x + this.width / 2, y : this.y + this.height / 2};
         }      
     }
     
