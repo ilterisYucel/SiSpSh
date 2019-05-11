@@ -21,6 +21,8 @@ var yStep = xStep * factor;
 var vFactorX = xStep / 60;
 var vFactorY = yStep / 60;
 
+var itemID = 0;
+
 var windowBounds = {
                         x : 0,
                         y : 0,
@@ -372,6 +374,7 @@ class Enemy extends Ship{
             }.bind(this));
     }
     
+    
     hit(bullet){
     	this.energy -= bullet.effect;
     }
@@ -411,6 +414,25 @@ class Enemy extends Ship{
             meteor.strength = 0;
         }
        
+    }
+    
+    dealTeamCrash(){
+        eShips.forEach(function(eShip){
+            eShips.forEach(function(eShip1){
+                if(calculateDistance(eShip, eShip1) < 1.5 * xStep && eShip.id != eShip1.id){
+                    playerMotors(eShip.x + container.x, eShip.y + container.y, (180/Math.PI) * (eShip.rotation), 2);
+                    eShip.rotation += Math.PI;
+                    eShip.x += eShip.speedX * Math.sin(eShip.rotation);
+                    eShip.y -= eShip.speedY * Math.cos(eShip.rotation);
+                    
+                    playerMotors(eShip1.x + container.x, eShip1.y + container.y, (180/Math.PI) * (eShip1.rotation), 2);
+                    eShip1.rotation += Math.PI;
+                    eShip1.x += eShip1.speedX * Math.sin(eShip1.rotation);
+                    eShip1.y -= eShip1.speedY * Math.cos(eShip1.rotation);
+                    
+                }
+            }.bind(eShip))
+        });
     }
     
     death(){
@@ -587,8 +609,16 @@ class Enemy1 extends Enemy{
                     this.rotation = 3*(Math.PI/2);
                     this.eFire();
                 }
-            }           
+            }
+
+            /*eShips.forEach(function(eShip){
+                if(hitTestRectangle(eShip, radar) && this.id !== eShip.id){
+                    this.rotation += Math.PI;
+                    this.x += 2 * xStep * Math.sin(this.rotation);
+                }
+            }.bind(this, radar));*/           
         }.bind(this));
+        
     }
     
     hit(bullet) {
@@ -669,6 +699,14 @@ class Enemy2 extends Enemy{
                     this.eFire();
                 }
             }
+            
+            /*eShips.forEach(function(eShip){
+                if(hitTestRectangle(eShip, radar) && this.id !== eShip.id){
+                    eShip.rotation += Math.PI;
+                    eShip.y -= yStep * 2 * Math.cos(this.rotation);
+                    console.log(this.id, eShip.id);
+                }
+            }.bind(this, radar));*/
                 
         }.bind(this));
     }
@@ -1101,6 +1139,7 @@ function game(){
     
     for(var i = 0; i < matrix.length; i++){
         for(var j = 0; j < matrix[0].length; j++){
+            itemID++;
             if(matrix[i][j] == 'M'){
                 var meteor = new Meteor(meteorTexture, breakEffects);
                 meteor.x = (j-10) * xStep + 0.5 * xStep;
@@ -1129,6 +1168,7 @@ function game(){
             }
             else if(matrix[i][j] == 'P'){
                 pShip = new playerShip(shipTexture);
+                pShip.id = itemID;
                 pShip.width = xStep;
                 pShip.height = xStep;
                 pShip.x = (j-10) * xStep + 0.5 * xStep;
@@ -1154,6 +1194,7 @@ function game(){
             }
             else if(matrix[i][j] == '1'){
                 var enemy = new Enemy1(shipTexture1);
+                enemy.id = itemID;
                 enemy.width = xStep;
                 enemy.height = xStep;
                 enemy.x = (j-10) * xStep + 0.5 * xStep;
@@ -1189,6 +1230,7 @@ function game(){
             }
             else if(matrix[i][j] == '2'){
             	var enemy = new Enemy2(shipTexture1);
+            	enemy.id = itemID;
                 enemy.width = xStep;
                 enemy.height = xStep;
                 enemy.x = (j-10) * xStep + 0.5 * xStep;
@@ -1223,6 +1265,7 @@ function game(){
                 enemy.radars.push(endRadar);     
             } else if(matrix[i][j] == '3'){
             	var enemy = new Enemy3(shipTexture2);
+            	enemy.id = itemID;
                 enemy.width = xStep;
                 enemy.height = xStep;
                 enemy.x = (j-10) * xStep + 0.5 * xStep;
@@ -1245,6 +1288,7 @@ function game(){
                 enemy.radars.push(frontRadar);
             } else if(matrix[i][j] == '4'){
             	var enemy = new Enemy4(shipTexture3);
+            	enemy.id = itemID;
                 enemy.width = xStep;
                 enemy.height = xStep;
                 enemy.x = (j-10) * xStep + 0.5 * xStep;
@@ -1465,12 +1509,14 @@ function game(){
         eShips = eShips.filter(function(eShip){
             eShip.move();
             eShip.radar();
+            eShip.dealTeamCrash();
             
             if(eShip.energy <= 0){
                 container.removeChild(eShip);
                 eShip.death();
                 return false;
             }
+            
             return true;
         });
         
@@ -1809,11 +1855,11 @@ function meteorCrashEffect(beginX, beginY, angle, factor){
 
 }
 
-function playerMotors(beginX, beginY, angle){
+function playerMotors(beginX, beginY, angle, factor = 1){
     
     var emitter = new Proton.Emitter();
     
-    emitter.rate = new Proton.Rate(10);
+    emitter.rate = new Proton.Rate(10 * factor);
     
     emitter.addInitialize(new Proton.Body(path + '/spaceEffects_006.png'));
     //emitter.addInitialize(new Proton.Radius(1, 12));
@@ -1885,4 +1931,8 @@ window.onload = function(){
     app = new PIXI.Application(x, y, {backgroundColor : 0xFFFFFF});
     document.body.appendChild(app.view);
     game();
+    
+    for(var i = 0; i < eShips.length; i++){
+        console.log(eShips[i].id);
+    }
 }
