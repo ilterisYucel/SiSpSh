@@ -431,21 +431,13 @@ class Enemy extends Ship{
     
     dealTeamCrash(){
         eShips.forEach(function(eShip){
-            eShips.forEach(function(eShip1){
-                if(calculateDistance(eShip, eShip1) < 1.5 * xStep && eShip.id != eShip1.id){
-                    playerMotors(eShip.x + container.x, eShip.y + container.y, (180/Math.PI) * (eShip.rotation), 2);
-                    eShip.rotation += Math.PI;
-                    eShip.x += eShip.speedX * Math.sin(eShip.rotation);
-                    eShip.y -= eShip.speedY * Math.cos(eShip.rotation);
-                    
-                    playerMotors(eShip1.x + container.x, eShip1.y + container.y, (180/Math.PI) * (eShip1.rotation), 2);
-                    eShip1.rotation += Math.PI;
-                    eShip1.x += eShip1.speedX * Math.sin(eShip1.rotation);
-                    eShip1.y -= eShip1.speedY * Math.cos(eShip1.rotation);
-                    
-                }
-            }.bind(eShip))
-        });
+            if(calculateDistance(eShip, this) < 1.5 * xStep && eShip.id != this.id){
+                playerMotors(this.x + container.x, this.y + container.y, (180/Math.PI) * (this.rotation), 2);
+                this.rotation += Math.PI;
+                this.x += this.speedX * Math.sin(this.rotation);
+                this.y -= this.speedY * Math.cos(this.rotation);
+            }
+        }.bind(this));
     }
     
     death(){
@@ -874,7 +866,6 @@ class Enemy4 extends Enemy{
 	static defaultMove() {
         if(contain(this, containerBounds) == undefined){
         	if (this.rotation == Math.PI || this.rotation == 0) {
-        		console.log("Y:" + this.y);
             	this.y -= this.speedY * Math.cos(this.rotation);
 		        this.radars.forEach(function(radar){
 		            radar.y -= this.speedY * Math.cos(this.rotation);
@@ -885,7 +876,6 @@ class Enemy4 extends Enemy{
 		            }
 		        }.bind(this));
             } else {
-            	console.log("X:" + this.x);
 		        this.x += this.speedX * Math.sin(this.rotation);
 		        this.radars.forEach(function(radar){
 		            radar.x += this.speedX * Math.sin(this.rotation);
@@ -1027,6 +1017,7 @@ class Enemy4 extends Enemy{
     	this.collide = Enemy4.lockedCollide.bind(this);
     	this.hit = function(){};
     	this.radar = function(){};
+    	this.dealTeamCrash = Enemy4.lockedDealTeamCrash.bind(this);
     	
     	this.radars.filter(function(radar){
         	container.removeChild(radar);
@@ -1042,6 +1033,7 @@ class Enemy4 extends Enemy{
 				this.collide = Enemy4.lockedCollide.bind(this);
 				this.hit = function(){};
 				this.radar = function(){};
+				this.dealTeamCrash = Enemy4.lockedDealTeamCrash.bind(this);
 				flag = true;
             }
         }.bind(this));
@@ -1051,6 +1043,15 @@ class Enemy4 extends Enemy{
 		        return false;
 		    });
         }
+    }
+    
+    static lockedDealTeamCrash() {
+        eShips.forEach(function(eShip){
+            if(calculateDistance(eShip, this) < 1.5 * xStep && eShip.id != this.id){
+                this.energy = 0;
+                eShip.energy = 0;
+            }
+        }.bind(this));
     }
 }
 
