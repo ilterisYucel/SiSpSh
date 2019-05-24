@@ -60,6 +60,16 @@ if (xhr.status < 200 || xhr.status >= 300) {
 	matrix = JSON.parse(xhr.responseText);
 }
 
+class item extends PIXI.Sprite{
+	constructor(texture, rotation, collectFunc = null){
+        super(texture);
+        this.anchor.set(0.5);
+        this.rotation = rotation;
+        
+        this.onCollect = collectFunc;
+    }
+}
+
 class bullet extends PIXI.Sprite{
     constructor(texture, rotation){
         super(texture);
@@ -208,6 +218,9 @@ class playerShip extends Ship{
             sprite.height = xStep / 2;
             sprite.anchor.set(0.5);
             container.addChild(sprite);
+            if(this.itemDrop) {
+            	this.itemDrop();
+            }
         }.bind(this));
     }
     
@@ -854,6 +867,8 @@ class Enemy4 extends Enemy{
     	this.collide = Enemy4.defaultCollide.bind(this);
     	this.hit = Enemy4.defaultHit.bind(this);
     	this.radar = Enemy4.defaultRadar.bind(this);
+    	this.dirChange = true;
+    	this.dirChangeTimeout = null;
 	}
 	
 	static defaultMove() {
@@ -918,23 +933,25 @@ class Enemy4 extends Enemy{
     		pShip.energy = 0;
     		return;
     	}
-    	if (Math.abs(diff.x) >= Math.abs(diff.y)) {
-    		if (diff.x >= 0) {
-    			this.rotation = 3*(Math.PI/2);
-    			this.x -= this.speedX;
-    		} else {
-    			this.rotation = Math.PI/2;
-    			this.x += this.speedX;
-    		}
-    	} else {
-    		if (diff.y >= 0) {
-    			this.rotation = 0;
-    			this.y -= this.speedY;
-    		} else {
-    			this.rotation = Math.PI;
-    			this.y += this.speedY;
-    		}
+    	if (this.dirChange) {
+			if (Math.abs(diff.x) >= Math.abs(diff.y)) {
+				if (diff.x >= 0) {
+					this.rotation = 3*(Math.PI/2);
+				} else {
+					this.rotation = Math.PI/2;
+				}
+			} else {
+				if (diff.y >= 0) {
+					this.rotation = 0;
+				} else {
+					this.rotation = Math.PI;
+				}
+			}
+			this.dirChange = false;
+			this.dirChangeTimeout = setTimeout(function(){ this.dirChange = true; }.bind(this),500);
     	}
+    	this.x += this.speedX*Math.sin(this.rotation);
+    	this.y -= this.speedY*Math.cos(this.rotation);
     }
     
     static defaultCollide(meteor) {
