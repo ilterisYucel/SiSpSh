@@ -580,6 +580,28 @@ class Meteor extends PIXI.Sprite{
 		this.y = -3*adLoc;
 		this.state = "death";
 	}
+	
+	resolveSelfCrash(){
+        meteors.forEach(function(meteor){
+            meteors.forEach(function(meteor1){
+                if(hitTestRectangle(meteor, meteor1) && meteor.id != meteor1.id){
+                    var slope = Math.PI / 2 + calculateSlope(meteor, meteor1);
+        
+                    meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (Math.PI + slope), 1);
+                    meteorCrashEffect(container.x + meteor1.x, container.y + meteor1.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
+                    meteor.x += meteor.speedX * Math.sin(slope);
+                    meteor.y -= meteor.speedY * Math.cos(slope);
+                    
+                    meteor.x += meteor.speedX * Math.sin(slope + Math.PI);
+                    meteor.y -= meteor.speedY * Math.cos(slope + Math.PI);
+        
+                    meteor.strength -= meteor1.damage;
+                    meteor1.strength -= meteor.damage;  
+                    
+                }
+            }.bind(meteor));
+        });    
+    }
 }
 
 class Enemy1 extends Enemy{
@@ -1167,6 +1189,7 @@ function game(){
 			itemID++;
 			if(matrix[i][j] == 'M'){
 				var meteor = new Meteor(meteorTexture, breakEffects);
+				meteor.id = itemID;
 				meteor.x = (j-10) * xStep + 0.5 * xStep;
 				meteor.y = (i-10) * yStep + 0.5 * xStep;
 				meteor.width = xStep;
@@ -1179,6 +1202,7 @@ function game(){
 				container.addChild(meteor);
 			} else if (matrix[i][j] == 'W') {
 				var meteor = new Meteor(meteorTexture, breakEffects);
+				meteor.id = itemID;
 				meteor.x = (j-10) * xStep + 0.5 * xStep;
 				meteor.y = (i-10) * yStep + 0.5 * xStep;
 				meteor.width = xStep;
@@ -1455,6 +1479,7 @@ function game(){
 		}
 		meteors = meteors.filter(function(meteor){
 			var ret = true;
+			meteor.resolveSelfCrash();
 			
 			if(meteor.strength <= 0){
 				meteor.death();
