@@ -584,7 +584,7 @@ class Meteor extends PIXI.Sprite{
 	resolveSelfCrash(){
         meteors.forEach(function(meteor){
             meteors.forEach(function(meteor1){
-                if(hitTestRectangle(meteor, meteor1) && meteor.id != meteor1.id){
+                if(hitTestRectangle(meteor, meteor1) && meteor.id != meteor1.id && (meteor.state == "free" && meteor1.state == "free")){
                     var slope = Math.PI / 2 + calculateSlope(meteor, meteor1);
         
                     meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (Math.PI + slope), 1);
@@ -598,6 +598,24 @@ class Meteor extends PIXI.Sprite{
                     meteor.strength -= meteor1.damage;
                     meteor1.strength -= meteor.damage;  
                     
+                }else if (hitTestRectangle(meteor, meteor1) && meteor.id != meteor1.id && (meteor.state == "catched" || meteor1.state == "catched")){
+                    var slope = Math.PI / 2 + calculateSlope(meteor, meteor1);
+        
+                    meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (Math.PI + slope), 1);
+                    meteorCrashEffect(container.x + meteor1.x, container.y + meteor1.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
+                    meteor.x += meteor.speedX * Math.sin(slope);
+                    meteor.y -= meteor.speedY * Math.cos(slope);
+                    
+                    meteor.x += meteor.speedX * Math.sin(slope + Math.PI);
+                    meteor.y -= meteor.speedY * Math.cos(slope + Math.PI);
+        
+                    meteor.strength -= meteor1.damage;
+                    meteor1.strength -= meteor.damage;  
+                    
+                    pShip.x += pShip.speedX * Math.sin(slope);
+		            pShip.y -= pShip.speedY * Math.cos(slope);
+		
+		            pShip.moveItems();                    
                 }
             }.bind(meteor));
         });    
