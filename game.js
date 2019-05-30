@@ -329,7 +329,7 @@ class playerShip extends Ship{
 	}
 	
 	uncatch(){
-	    this.itemList["catchedMeteor"] = null;    	  
+		this.itemList["catchedMeteor"] = null;		  
 		
 	}
 	
@@ -586,36 +586,36 @@ class Meteor extends PIXI.Sprite{
 	}
 	
 	resolveSelfCrash(){
-        meteors.forEach(function(meteor){
-            if(hitTestRectangle(this, meteor) && this.id != meteor.id && (this.state == "free" && meteor.state == "free")){
-                var slope = Math.PI / 2 + calculateSlope(this, meteor);
-    
-                meteorCrashEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope), 1);
-                meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
-                this.x += this.speedX * Math.sin(slope);
-                this.y -= this.speedY * Math.cos(slope);
-    
-                this.strength -= meteor.damage;
-                meteor.strength -= this.damage;  
-                
-            }else if (hitTestRectangle(this, meteor) && this.id != meteor.id && (this.state == "catched" || meteor.state == "catched")){
-                var slope = Math.PI / 2 + calculateSlope(this, meteor);
-    
-                meteorCrashEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope), 1);
-                meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
-                this.x += this.speedX * Math.sin(slope);
-                this.y -= this.speedY * Math.cos(slope);
-                
-                this.strength -= meteor.damage;
-                meteor.strength -= this.damage;  
-                
-                pShip.x += pShip.speedX * Math.sin(slope);
-	            pShip.y -= pShip.speedY * Math.cos(slope);
+		meteors.forEach(function(meteor){
+			if(hitTestRectangle(this, meteor) && this.id != meteor.id && (this.state == "free" && meteor.state == "free")){
+				var slope = Math.PI / 2 + calculateSlope(this, meteor);
 	
-	            pShip.moveItems();                    
-            }
-        }.bind(this));  
-    }
+				meteorCrashEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope), 1);
+				meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
+				this.x += this.speedX * Math.sin(slope);
+				this.y -= this.speedY * Math.cos(slope);
+	
+				this.strength -= meteor.damage;
+				meteor.strength -= this.damage;  
+				
+			}else if (hitTestRectangle(this, meteor) && this.id != meteor.id && (this.state == "catched" || meteor.state == "catched")){
+				var slope = Math.PI / 2 + calculateSlope(this, meteor);
+	
+				meteorCrashEffect(container.x + this.x, container.y + this.y, (180/Math.PI) * (Math.PI + slope), 1);
+				meteorCrashEffect(container.x + meteor.x, container.y + meteor.y, (180/Math.PI) * (2 * Math.PI + slope), 1);
+				this.x += this.speedX * Math.sin(slope);
+				this.y -= this.speedY * Math.cos(slope);
+				
+				this.strength -= meteor.damage;
+				meteor.strength -= this.damage;  
+				
+				pShip.x += pShip.speedX * Math.sin(slope);
+				pShip.y -= pShip.speedY * Math.cos(slope);
+	
+				pShip.moveItems();					
+			}
+		}.bind(this));  
+	}
 }
 
 class Enemy1 extends Enemy{
@@ -1695,122 +1695,123 @@ function breakMeteor(event){
 	
 	
 	if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 0){
-	    console.log("in");
-	    pShip.meteorBreakerStatus = 1;
-	    var flagX = true;
-	    breakerLoc = pShip.getBreakerLoc();
+		console.log("in");
+		pShip.meteorBreakerStatus = 1;
+		var flagX = true;
+		breakerLoc = pShip.getBreakerLoc();
 
 	
-	    var shipBreakEffect = new PIXI.Sprite(pShip.effectTextures["breakEffect"]);
-	    shipBreakEffect.x = breakerLoc.x;
-	    shipBreakEffect.y = breakerLoc.y;
-	    shipBreakEffect.width = xStep;
-	    shipBreakEffect.height = xStep;
-	    shipBreakEffect.anchor.set(0.5);
-	    shipBreakEffect.rotation = pShip.rotation;
-	    container.addChild(shipBreakEffect);
-	    pShip.itemList["x"] = shipBreakEffect;
-	    
+		var shipBreakEffect = new PIXI.Sprite(pShip.effectTextures["breakEffect"]);
+		shipBreakEffect.x = breakerLoc.x;
+		shipBreakEffect.y = breakerLoc.y;
+		shipBreakEffect.width = xStep;
+		shipBreakEffect.height = xStep;
+		shipBreakEffect.anchor.set(0.5);
+		shipBreakEffect.rotation = pShip.rotation;
+		shipBreakEffect.distance = 0;
+		container.addChild(shipBreakEffect);
+		pShip.itemList["x"] = shipBreakEffect;
 	
-	    meteors = meteors.filter(function(meteor){
-		    if(hitTestRectangle(shipBreakEffect, meteor)){
-			    flagX = false;
-			    setTimeout(function(){
+		meteors = meteors.filter(function(meteor){
+			if(hitTestRectangle(shipBreakEffect, meteor)){
+				flagX = false;
+				setTimeout(function(){
 			
-				    container.removeChild(meteor);
-				    meteor.breakIt();
-				    pShip.energy += 10 * pShip.factor;
-				    pShip.itemList["x"] = null;
-				    container.removeChild(shipBreakEffect);
+					container.removeChild(meteor);
+					meteor.breakIt();
+					pShip.energy += 10 * pShip.factor;
+					pShip.itemList["x"] = null;
+					container.removeChild(shipBreakEffect);
 				   
-				    if(pShip.itemList["catchedMeteor"]){
-					    pShip.itemList["catchedMeteor"] = null;
-				    }
+					if(pShip.itemList["catchedMeteor"]){
+						pShip.itemList["catchedMeteor"] = null;
+					}
 				
-				    bg.interactive = true;
-				    bg.buttonMode = true;
+					bg.interactive = true;
+					bg.buttonMode = true;
 				
-			    }, 200);
-			    pShip.meteorBreakerStatus = 0;
-			    return false;
+				}, 200);
+				pShip.meteorBreakerStatus = 0;
+				return false;
 			
-		    }else{
+			}else{
 				
-			    return true;	
+				return true;	
 
-		    }
-	    });
-	    
+			}
+		});
+		
 		if(flagX){
-		    setTimeout(function(){
-			    pShip.itemList["x"] = null;
-			    container.removeChild(shipBreakEffect);
-			    bg.interactive = true;
-			    bg.buttonMode = true;
-			    pShip.meteorBreakerStatus = 0;	
-		    }, 1000);
-	    }
+			setTimeout(function(){
+				pShip.itemList["x"] = null;
+				container.removeChild(shipBreakEffect);
+				bg.interactive = true;
+				bg.buttonMode = true;
+				pShip.meteorBreakerStatus = 0;	
+			}, 1000);
+		}
 	
 	}
 	
 	else if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 1){
-	    pShip.invisibilityStatus = 0;
-        pShip.alpha = 1.0;
-	    pShip.meteorBreakerStatus = 1;
-	    var flagX = true;
-	    breakerLoc = pShip.getBreakerLoc();
+		pShip.invisibilityStatus = 0;
+		pShip.alpha = 1.0;
+		pShip.meteorBreakerStatus = 1;
+		var flagX = true;
+		breakerLoc = pShip.getBreakerLoc();
 
 	
-	    var shipBreakEffect = new PIXI.Sprite(pShip.effectTextures["breakEffect"]);
-	    shipBreakEffect.x = breakerLoc.x;
-	    shipBreakEffect.y = breakerLoc.y;
-	    shipBreakEffect.width = xStep;
-	    shipBreakEffect.height = xStep;
-	    shipBreakEffect.anchor.set(0.5);
-	    shipBreakEffect.rotation = pShip.rotation;
-	    container.addChild(shipBreakEffect);
-	    pShip.itemList["meteorBreakItem"] = shipBreakEffect;
+		var shipBreakEffect = new PIXI.Sprite(pShip.effectTextures["breakEffect"]);
+		shipBreakEffect.x = breakerLoc.x;
+		shipBreakEffect.y = breakerLoc.y;
+		shipBreakEffect.width = xStep;
+		shipBreakEffect.height = xStep;
+		shipBreakEffect.anchor.set(0.5);
+		shipBreakEffect.rotation = pShip.rotation;
+		shipBreakEffect.distance = 0;
+		container.addChild(shipBreakEffect);
+		pShip.itemList["meteorBreakItem"] = shipBreakEffect;
 	
-	    meteors = meteors.filter(function(meteor){
-		    if(hitTestRectangle(shipBreakEffect, meteor)){
-			    flagX = false;
-			    setTimeout(function(){
+		meteors = meteors.filter(function(meteor){
+			if(hitTestRectangle(shipBreakEffect, meteor)){
+				flagX = false;
+				setTimeout(function(){
 			
-				    container.removeChild(meteor);
-				    meteor.breakIt();
-				    pShip.energy += 10 * pShip.factor;
-				    container.removeChild(shipBreakEffect);
-				    pShip.itemList["meteorBreakItem"] = null;
-				    
-				    if(pShip.itemList["catchedMeteor"]){
-					    pShip.itemList["catchedMeteor"] = null;
-				    }
+					container.removeChild(meteor);
+					meteor.breakIt();
+					pShip.energy += 10 * pShip.factor;
+					container.removeChild(shipBreakEffect);
+					pShip.itemList["meteorBreakItem"] = null;
+					
+					if(pShip.itemList["catchedMeteor"]){
+						pShip.itemList["catchedMeteor"] = null;
+					}
 				
-				    bg.interactive = true;
-				    bg.buttonMode = true;
+					bg.interactive = true;
+					bg.buttonMode = true;
 				
-			    }, 200);
-			    
-			    pShip.meteorBreakerStatus = 0;
-			    return false;
+				}, 200);
+				
+				pShip.meteorBreakerStatus = 0;
+				return false;
 			
-		    }else{
+			}else{
 				
-			    return true;	
+				return true;	
 
-		    }
-	    });
-	    
+			}
+		});
+		
 		if(flagX){
-		    setTimeout(function(){
+			setTimeout(function(){
 			
-			    container.removeChild(shipBreakEffect);
-			    pShip.itemList["meteorBreakItem"] = null;
-			    bg.interactive = true;
-			    bg.buttonMode = true;
-			    pShip.meteorBreakerStatus = 0;	
-		    }, 1000);
-	    }	
+				container.removeChild(shipBreakEffect);
+				pShip.itemList["meteorBreakItem"] = null;
+				bg.interactive = true;
+				bg.buttonMode = true;
+				pShip.meteorBreakerStatus = 0;	
+			}, 1000);
+		}	
 	}
 }
 
@@ -1830,7 +1831,7 @@ function catchMeteor(event){
 	//breakerLoc = pShip.getBreakerLoc();
 	
 	if(pShip.meteorCatcherStatus == 0){
-	    breakerLoc = pShip.getBreakerLoc();
+		breakerLoc = pShip.getBreakerLoc();
 	
 		pShip.meteorCatcherStatus = 1;
 		var catchItem = new PIXI.Sprite(pShip.effectTextures["transportMeteorEffect"]);
@@ -1874,25 +1875,25 @@ function onInvisibility(event){
 	
 	if(pShip.invisibilityStatus == 0){
 	
-	    pShip.invisibilityStatus = 1;
-        if(pShip.meteorCatcherStatus == 1){
-		    pShip.meteorCatcherStatus = 0;
-		    container.removeChild(pShip.itemList["catchItem"]);
-		    pShip.itemList["catchItem"] = null;
+		pShip.invisibilityStatus = 1;
+		if(pShip.meteorCatcherStatus == 1){
+			pShip.meteorCatcherStatus = 0;
+			container.removeChild(pShip.itemList["catchItem"]);
+			pShip.itemList["catchItem"] = null;
 		
-		    if(pShip.itemList["catchedMeteor"] && pShip.itemList["catchedMeteor"].state != "death"){
-			    pShip.itemList["catchedMeteor"].state = "free";
-			    pShip.itemList["catchedMeteor"].calculateRotParams();
-			    pShip.uncatch();
+			if(pShip.itemList["catchedMeteor"] && pShip.itemList["catchedMeteor"].state != "death"){
+				pShip.itemList["catchedMeteor"].state = "free";
+				pShip.itemList["catchedMeteor"].calculateRotParams();
+				pShip.uncatch();
 	
-		    }    
-        }   
-    
-        pShip.alpha = 0.5;
-    }else{
-        pShip.invisibilityStatus = 0;
-        pShip.alpha = 1.0;
-    }
+			}	
+		}   
+	
+		pShip.alpha = 0.5;
+	}else{
+		pShip.invisibilityStatus = 0;
+		pShip.alpha = 1.0;
+	}
 }
 
 function offInvisibility(){
