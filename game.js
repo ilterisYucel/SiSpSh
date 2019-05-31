@@ -232,9 +232,11 @@ class playerShip extends Ship{
 	        this.meteorCatcherStatus = 0;
 	        container.removeChild(this.itemList["catchItem"]);
 		    this.itemList["catchItem"] = null;
+		    console.log(this.itemList["catchedMeteor"].id);
 		    this.itemList["catchedMeteor"].status = "free";
 		    this.itemList["catchedMeteor"].calculateRotParams();
-		    this.uncatch();
+		    console.log(this.itemList["catchedMeteor"].status);
+		    //this.uncatch();
 		    console.log("in");
 	    }
 	    if(this.meteorCatcherStatus && !this.itemList["catchedMeteor"]){
@@ -259,6 +261,8 @@ class playerShip extends Ship{
 			sprite.anchor.set(0.5);
 			container.addChild(sprite);
 		}.bind(this));
+		
+		container.removeChild(this);
 	}
 	
 	getBreakerLoc(){
@@ -1671,7 +1675,7 @@ function game(){
 		contain(pShip, containerBounds);
 		
 		if(pShip.energy <= 0 && pShip.alive){
-			container.removeChild(pShip);
+			//container.removeChild(pShip);
 			pShip.death();
 			pShip.alive = false;
 			energyCounter.counter.width = 0;
