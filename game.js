@@ -232,23 +232,20 @@ class playerShip extends Ship{
 	        this.meteorCatcherStatus = 0;
 	        container.removeChild(this.itemList["catchItem"]);
 		    this.itemList["catchItem"] = null;
-		    this.itemList["catchedMeteor"].status = "free";
+		    this.itemList["catchedMeteor"].state = "free";
 		    this.itemList["catchedMeteor"].calculateRotParams();
 		    this.uncatch();
-		    console.log("in");
 	    }
 	    if(this.meteorCatcherStatus && !this.itemList["catchedMeteor"]){
 	        this.meteorCatcherStatus = 0;
 	        container.removeChild(this.itemList["catchItem"]);
 		    this.itemList["catchItem"] = null;
-		    console.log("in1");	    
 	    }
 	    
 	    if(this.meteorBreakerStatus){
 	        this.meteorBreakerStatus = 0;
 	        container.removeChild(this.itemList["meteorBreakItem"]);
 		    this.itemList["meteorBreakItem"] = null;
-		    console.log("in2");	    
 	    }
 		this.deathItemsTextures.forEach(function(texture){
 			var sprite = new PIXI.Sprite(texture);
@@ -2312,7 +2309,7 @@ window.onload = function(){
 	document.body.appendChild(app.view);
 	game();
 	
-	for(var i = 0; i < eShips.length; i++){
+	/*for(var i = 0; i < eShips.length; i++){
 		console.log(eShips[i].id);
-	}
+	}*/
 }
