@@ -204,12 +204,23 @@ class playerShip extends Ship{
 	}
 	
 	eFire(){
+	    if(this.invisibilityStatus && !this.itemList["fireRegulator"]){
+	        this.invisibilityStatus = 0;
+	        this.alpha = 1.0;
+	    }
+	    
+	    if(this.invisibilityStatus && this.itemList["fireRegulator"]){
+	    	this.invisibilityStatus = 1;
+	        this.alpha = 0.5;
+	    }
 		if(this.readyLauncher){
+        
 			var eBullet = new energyBullet(this.bulletTextures["energyBullet"], this.rotation);
 			eBullet.width = xStep / 8;
 			eBullet.height = xStep / 2;
 			eBullet.x = this.x;
 			eBullet.y = this.y;
+			eBullet.alpha = this.alpha;
 			container.addChild(eBullet);
 			pBullets.push(eBullet);
 			this.readyLauncher = false;
@@ -217,6 +228,28 @@ class playerShip extends Ship{
 	}
 	
 	death(){
+	    if(this.meteorCatcherStatus && this.itemList["catchedMeteor"] && this.itemList["catchedMeteor"].status != "death" ){
+	        this.meteorCatcherStatus = 0;
+	        container.removeChild(this.itemList["catchItem"]);
+		    this.itemList["catchItem"] = null;
+		    this.itemList["catchedMeteor"].status = "free";
+		    this.itemList["catchedMeteor"].calculateRotParams();
+		    this.uncatch();
+		    console.log("in");
+	    }
+	    if(this.meteorCatcherStatus && !this.itemList["catchedMeteor"]){
+	        this.meteorCatcherStatus = 0;
+	        container.removeChild(this.itemList["catchItem"]);
+		    this.itemList["catchItem"] = null;
+		    console.log("in1");	    
+	    }
+	    
+	    if(this.meteorBreakerStatus){
+	        this.meteorBreakerStatus = 0;
+	        container.removeChild(this.itemList["meteorBreakItem"]);
+		    this.itemList["meteorBreakItem"] = null;
+		    console.log("in2");	    
+	    }
 		this.deathItemsTextures.forEach(function(texture){
 			var sprite = new PIXI.Sprite(texture);
 			sprite.x = randomInt(this.x - this.width / 2, this.x + this.width /2);
@@ -336,6 +369,12 @@ class playerShip extends Ship{
 	controlStatus(){
 		this.intervalId = setInterval(function(){
 			this.readyLauncher = true;
+			if(this.invisibilityStatus){
+			    this.energy -= Math.floor(1 / this.factor);
+			}
+			if(this.meteorCatcherStatus){
+			    this.energy -= Math.floor(1 / this.factor);
+			}
 		}.bind(this),1000);
 	}
 	
@@ -648,7 +687,7 @@ class Enemy1 extends Enemy{
 	
 	radar(){
 		this.radars.forEach(function(radar){
-			if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+			if(hitTestRectangle(pShip, radar) && this.readyLauncher && !pShip.invisibilityStatus){
 				if (this.x <= pShip.x) {
 					this.rotation = Math.PI/2;
 					this.eFire();
@@ -737,7 +776,7 @@ class Enemy2 extends Enemy{
 	
 	radar(){
 		this.radars.forEach(function(radar){
-			if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+			if(hitTestRectangle(pShip, radar) && this.readyLauncher && !pShip.invisibilityStatus){
 				if (this.y <= pShip.y) {
 					this.rotation = Math.PI;
 					this.eFire();
@@ -844,7 +883,7 @@ class Enemy3 extends Enemy{
 	}
 	
 	radar() {
-		if (hitTestRectangle(pShip, this.radars[0]) && this.readyLauncher) {
+		if (hitTestRectangle(pShip, this.radars[0]) && this.readyLauncher && !pShip.invisibilityStatus) {
 			var tempRotation = this.rotation;
 			this.rotation = Math.PI/2 + /*tempRotation +*/ calculateSlope(pShip, this);
 			this.eFire();
@@ -1070,7 +1109,7 @@ class Enemy4 extends Enemy{
 	static defaultRadar() {
 		var flag = false;
 		this.radars.forEach(function(radar){
-			if(hitTestRectangle(pShip, radar) && this.readyLauncher){
+			if(hitTestRectangle(pShip, radar) && this.readyLauncher && !pShip.invisibilityStatus){
 				this.move = Enemy4.lockedMove.bind(this);
 				this.collide = Enemy4.lockedCollide.bind(this);
 				this.hit = function(){};
@@ -1695,7 +1734,7 @@ function breakMeteor(event){
 	
 	
 	if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 0){
-		console.log("in");
+	
 		pShip.meteorBreakerStatus = 1;
 		var flagX = true;
 		breakerLoc = pShip.getBreakerLoc();
@@ -1710,7 +1749,7 @@ function breakMeteor(event){
 		shipBreakEffect.rotation = pShip.rotation;
 		shipBreakEffect.distance = 0;
 		container.addChild(shipBreakEffect);
-		pShip.itemList["x"] = shipBreakEffect;
+		pShip.itemList["meteorBreakItem"] = shipBreakEffect;
 	
 		meteors = meteors.filter(function(meteor){
 			if(hitTestRectangle(shipBreakEffect, meteor)){
@@ -1720,7 +1759,7 @@ function breakMeteor(event){
 					container.removeChild(meteor);
 					meteor.breakIt();
 					pShip.energy += 10 * pShip.factor;
-					pShip.itemList["x"] = null;
+					pShip.itemList["meteorBreakItem"] = null;
 					container.removeChild(shipBreakEffect);
 				   
 					if(pShip.itemList["catchedMeteor"]){
@@ -1743,7 +1782,7 @@ function breakMeteor(event){
 		
 		if(flagX){
 			setTimeout(function(){
-				pShip.itemList["x"] = null;
+				pShip.itemList["meteorBreakItem"] = null;
 				container.removeChild(shipBreakEffect);
 				bg.interactive = true;
 				bg.buttonMode = true;
@@ -1753,9 +1792,7 @@ function breakMeteor(event){
 	
 	}
 	
-	else if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 1){
-		pShip.invisibilityStatus = 0;
-		pShip.alpha = 1.0;
+	else if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 1 && pShip.itemList["breakRegulator"]){
 		pShip.meteorBreakerStatus = 1;
 		var flagX = true;
 		breakerLoc = pShip.getBreakerLoc();
@@ -1766,6 +1803,7 @@ function breakMeteor(event){
 		shipBreakEffect.y = breakerLoc.y;
 		shipBreakEffect.width = xStep;
 		shipBreakEffect.height = xStep;
+		shipBreakEffect.alpha = 0.75;
 		shipBreakEffect.anchor.set(0.5);
 		shipBreakEffect.rotation = pShip.rotation;
 		shipBreakEffect.distance = 0;
@@ -1813,6 +1851,67 @@ function breakMeteor(event){
 			}, 1000);
 		}	
 	}
+	else if(pShip.meteorBreakerStatus == 0 && pShip.invisibilityStatus == 1 && !pShip.itemList["breakRegulator"]){
+		pShip.invisibilityStatus = 0;
+		pShip.alpha = 1.0;
+		pShip.meteorBreakerStatus = 1;
+		var flagX = true;
+		breakerLoc = pShip.getBreakerLoc();
+
+	
+		var shipBreakEffect = new PIXI.Sprite(pShip.effectTextures["breakEffect"]);
+		shipBreakEffect.x = breakerLoc.x;
+		shipBreakEffect.y = breakerLoc.y;
+		shipBreakEffect.alpha = 1.0;
+		shipBreakEffect.width = xStep;
+		shipBreakEffect.height = xStep;
+		shipBreakEffect.anchor.set(0.5);
+		shipBreakEffect.rotation = pShip.rotation;
+		shipBreakEffect.distance = 0;
+		container.addChild(shipBreakEffect);
+		pShip.itemList["meteorBreakItem"] = shipBreakEffect;
+	
+		meteors = meteors.filter(function(meteor){
+			if(hitTestRectangle(shipBreakEffect, meteor)){
+				flagX = false;
+				setTimeout(function(){
+			
+					container.removeChild(meteor);
+					meteor.breakIt();
+					pShip.energy += 10 * pShip.factor;
+					container.removeChild(shipBreakEffect);
+					pShip.itemList["meteorBreakItem"] = null;
+					
+					if(pShip.itemList["catchedMeteor"]){
+						pShip.itemList["catchedMeteor"] = null;
+					}
+				
+					bg.interactive = true;
+					bg.buttonMode = true;
+				
+				}, 200);
+				
+				pShip.meteorBreakerStatus = 0;
+				return false;
+			
+			}else{
+				
+				return true;	
+
+			}
+		});
+		
+		if(flagX){
+			setTimeout(function(){
+			
+				container.removeChild(shipBreakEffect);
+				pShip.itemList["meteorBreakItem"] = null;
+				bg.interactive = true;
+				bg.buttonMode = true;
+				pShip.meteorBreakerStatus = 0;	
+			}, 1000);
+		}		
+	}
 }
 
 function releaseMeteor(){
@@ -1830,7 +1929,7 @@ function catchMeteor(event){
 	//console.log(this.count);
 	//breakerLoc = pShip.getBreakerLoc();
 	
-	if(pShip.meteorCatcherStatus == 0){
+	if(pShip.meteorCatcherStatus == 0 && pShip.invisibilityStatus == 0){
 		breakerLoc = pShip.getBreakerLoc();
 	
 		pShip.meteorCatcherStatus = 1;
@@ -1846,7 +1945,8 @@ function catchMeteor(event){
 		pShip.itemList["catchedMeteor"] = null;
 		container.addChild(catchItem);
 
-	}else{
+	}
+	else if(pShip.meteorCatcherStatus == 1 && pShip.invisibilityStatus == 0){
 		pShip.meteorCatcherStatus = 0;
 		container.removeChild(pShip.itemList["catchItem"]);
 		pShip.itemList["catchItem"] = null;
@@ -1857,7 +1957,70 @@ function catchMeteor(event){
 			pShip.uncatch();
 	
 		}
-	} 
+	}
+	else if(pShip.meteorCatcherStatus == 0 && pShip.invisibilityStatus == 1 && !pShip.itemList["magnetoRegulator"]){
+	
+	    pShip.invisibilityStatus = 0;
+		pShip.alpha = 1.0;
+		breakerLoc = pShip.getBreakerLoc();
+	
+		pShip.meteorCatcherStatus = 1;
+		var catchItem = new PIXI.Sprite(pShip.effectTextures["transportMeteorEffect"]);
+		catchItem.x = breakerLoc.x;
+		catchItem.y = breakerLoc.y;
+		catchItem.width = xStep;
+		catchItem.height = xStep;
+		catchItem.anchor.set(0.5);
+		catchItem.rotation = pShip.rotation;
+		pShip.itemList["catchItem"] = catchItem;
+		pShip.itemList["catchItem"].distance = 0;
+		pShip.itemList["catchedMeteor"] = null;
+		container.addChild(catchItem);
+	}
+	
+	else if(pShip.meteorCatcherStatus == 1 && pShip.invisibilityStatus == 1 && !pShip.itemList["magnetoRegulator"]){
+		pShip.meteorCatcherStatus = 0;
+		container.removeChild(pShip.itemList["catchItem"]);
+		pShip.itemList["catchItem"] = null;
+		
+		if(pShip.itemList["catchedMeteor"] && pShip.itemList["catchedMeteor"].state != "death"){
+			pShip.itemList["catchedMeteor"].state = "free";
+			pShip.itemList["catchedMeteor"].calculateRotParams();
+			pShip.uncatch();
+	
+		}	
+	}
+	
+	else if(pShip.meteorCatcherStatus == 0 && pShip.invisibilityStatus == 1 && pShip.itemList["magnetoRegulator"]){
+		breakerLoc = pShip.getBreakerLoc();
+	
+		pShip.meteorCatcherStatus = 1;
+		var catchItem = new PIXI.Sprite(pShip.effectTextures["transportMeteorEffect"]);
+		catchItem.x = breakerLoc.x;
+		catchItem.y = breakerLoc.y;
+		catchItem.alpha = 0.5;
+		catchItem.width = xStep;
+		catchItem.height = xStep;
+		catchItem.anchor.set(0.5);
+		catchItem.rotation = pShip.rotation;
+		pShip.itemList["catchItem"] = catchItem;
+		pShip.itemList["catchItem"].distance = 0;
+		pShip.itemList["catchedMeteor"] = null;
+		container.addChild(catchItem);	
+	}
+	
+	else if (pShip.meteorCatcherStatus == 1 && pShip.invisibilityStatus == 1 && pShip.itemList["magnetoRegulator"]){
+		pShip.meteorCatcherStatus = 0;
+		container.removeChild(pShip.itemList["catchItem"]);
+		pShip.itemList["catchItem"] = null;
+		
+		if(pShip.itemList["catchedMeteor"] && pShip.itemList["catchedMeteor"].state != "death"){
+			pShip.itemList["catchedMeteor"].state = "free";
+			pShip.itemList["catchedMeteor"].calculateRotParams();
+			pShip.uncatch();
+	
+		}	
+	}
 	
 }
 
@@ -1876,7 +2039,7 @@ function onInvisibility(event){
 	if(pShip.invisibilityStatus == 0){
 	
 		pShip.invisibilityStatus = 1;
-		if(pShip.meteorCatcherStatus == 1){
+		if(pShip.meteorCatcherStatus == 1 && !pShip.itemList["magnetoRegulator"]){
 			pShip.meteorCatcherStatus = 0;
 			container.removeChild(pShip.itemList["catchItem"]);
 			pShip.itemList["catchItem"] = null;
@@ -1887,6 +2050,14 @@ function onInvisibility(event){
 				pShip.uncatch();
 	
 			}	
+		}
+		
+		if(pShip.meteorBreakerStatus == 1 && !pShip.itemList["breakerRegulator"]){
+		    container.removeChild(pShip.itemList["meteorBreakItem"]);
+			pShip.itemList["meteorBreakItem"] = null;
+			bg.interactive = true;
+			bg.buttonMode = true;
+			pShip.meteorBreakerStatus = 0;			
 		}   
 	
 		pShip.alpha = 0.5;
