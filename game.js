@@ -50,6 +50,7 @@ var rotationParams = {
 					 };
 
 var matrix;
+var data;
 
 let xhr = new XMLHttpRequest();
 xhr.open("GET", "assets/levels/level" + level + ".json", false);
@@ -58,7 +59,8 @@ xhr.send();
 if (xhr.status < 200 || xhr.status >= 300) {
 	console.log("XHR failed.");
 } else {
-	matrix = JSON.parse(xhr.responseText);
+	data = JSON.parse(xhr.responseText);
+	matrix = data.matrix;
 }
 
 class Item extends PIXI.Sprite{
@@ -1397,18 +1399,6 @@ function game(){
 				enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
 				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
 				enemy.deathItemsTextures = eDeathItems;
-				enemy.dropItem = function() {
-					var item = new Item(itemTexture0,function(){
-						pShip.factor += 0.2;
-						pShip.speedX += 0.2;
-						pShip.speedY += 0.2;
-					});
-					
-					item.x = this.x;
-					item.y = this.y;
-					items.push(item);
-					container.addChild(item);
-				}.bind(enemy);
 				eShips.push(enemy);
 				container.addChild(enemy);
 				
@@ -1452,6 +1442,10 @@ function game(){
 				enemy.radars.push(frontRadar);
 				enemy.radars.push(endRadar);	   
 				
+			} else if (matrix[i][j] == 'S' || matrix[i][j] == 's') {
+				// Do nothing
+			} else {
+				eval(data[matrix[i][j]]);
 			}
 		}
 	}
