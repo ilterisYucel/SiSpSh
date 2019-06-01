@@ -184,6 +184,7 @@ class Station1 extends Station{
 		if(this.readyLauncher){
 		       
 			var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
+			console.log(eBullet.effect);
 			eBullet.width = xStep / 8;
 			eBullet.height = xStep / 2;
 			eBullet.x = fireX;
@@ -1782,6 +1783,27 @@ function game(){
 				if(hitTestRectangle(meteor, bullet)){
 					container.removeChild(bullet);
 					ret = false;
+				}
+			});
+			
+			eShips.forEach(function(eShip){
+				if(hitTestRectangle(eShip, bullet)){
+					bullet.alpha = 0;
+					//ret = true;
+					console.log("ok");
+				} else {
+					bullet.alpha = 1.0;
+					//ret = true;				
+				}
+			});
+			
+			stations.forEach(function(station){
+				if(hitTestRectangle(station, bullet)){
+					bullet.alpha = 0.5;
+					//ret = true;
+				} else {
+					bullet.alpha = 1.0;
+					//ret = true;				
 				}
 			});
 			
