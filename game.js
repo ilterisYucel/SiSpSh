@@ -14,6 +14,7 @@ var eShips = [];
 var meteors = [];
 var radars = [];
 var items = [];
+var stations = [];
 
 var adLoc = 0.85 * y;
 var factor = (adLoc) / x;
@@ -114,6 +115,86 @@ class Ship extends PIXI.Sprite{
 		this.speedY = factor * vFactorY;
 		this.energy = energy;
 		this.anchor.set(0.5);
+	}
+}
+
+class Station extends PIXI.Sprite{
+    constructor(texture, energy = 500, factor = 1){
+        super(texture);
+        this.energy = energy;
+        this.factor = factor
+        this.anchor.set(0.5);
+    }
+    
+    hit(bullet){
+		this.energy -= bullet.effect;
+	}
+}
+
+class Station1 extends Station{
+    constructor(texture, energy = 500, factor = 1, shipsTextures = {}, bulletTextures = {}, radars = []){
+        super(texture, energy, factor);
+        this.shipsTextures = shipsTextures;
+        this.bulletTextures = bulletTextures;
+        this.radars = radars;
+        this.intervalId = 0;
+        this.readyLauncher = true;
+    }
+    
+    hit(bullet){
+        super.hit(bullet);
+        this.eFire(pShip.rotation, pShip.x, pShip.y)
+        
+    }
+    
+    eFire(rotation, x, y){
+        
+        var fireX = this.x;
+        var fireY = this.y;
+        var fireRotation = rotation + Math.PI;
+    
+        if(rotation => 0 && rotation < Math.PI / 2){
+            fireX = x;
+            fireY = this.y + this.height / 2;
+        }
+        
+        if(rotation => Math.PI / 2 && rotation < Math.PI){
+            fireX = this.x;
+            fireY = y;
+            
+        }
+        
+        if(rotation >= Math.PI && rotation < 3 * Math.PI / 2){
+            fireX = x;
+            fireY = this.y - this.height / 2;
+        }
+        
+        if(rotation >= 3 * Math.PI / 2 && rotation < 2 * Math.PI){
+            fireX = this.x;
+            fireY = y;
+        }
+
+		if(this.readyLauncher){
+			var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
+			eBullet.width = xStep / 8;
+			eBullet.height = xStep / 2;
+			eBullet.x = fireX;
+			eBullet.y = fireY;
+			eBullet.initialPos.x = fireX;
+			eBullet.initialPos.y = fireY;
+			eBullet.range = 10 * xStep;
+			container.addChild(eBullet);
+			eBullets.push(eBullet);
+			this.readyLauncher = false;
+		}
+    
+    }
+
+    
+    controlStatus(){
+		this.intervalId = setInterval(function(){
+			this.readyLauncher = true;
+		}.bind(this),1000);
 	}
 }
 
@@ -1227,6 +1308,8 @@ function game(){
 	
 	var transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
 	var invisibilityItem = new PIXI.Texture.fromImage(path + "shield_bronze.png");
+	var station1Texture = new PIXI.Texture.fromImage(path + "spaceStation_020.png")
+	var station1Radar = new PIXI.Texture.fromImage(path + "station1_radar.png");
 	
 	bg = new PIXI.Sprite(bgTexture);
 	bg.x = 0;
@@ -1455,6 +1538,34 @@ function game(){
 				
 			} else if (matrix[i][j] == 'S' || matrix[i][j] == 's') {
 				// Do nothing
+			} else if(matrix[i][j] == 'I'){
+			    var station1 = new Station1(station1Texture);
+			    station1.width = 2.5 * xStep;
+			    station1.height = 5 * xStep;
+			    station1.x = (j-10) * xStep + 1.25 * xStep;
+			    station1.y = (i-10) * yStep + 2.5 * xStep;
+			    station1.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+			    station1.shipsTextures["1"] = shipTexture1;
+			    container.addChild(station1);
+			    stations.push(station1);
+			    var leftRadar = new Radar(station1Radar, station1, 0);
+			    leftRadar.width = 5 * xStep;
+			    leftRadar.height = 15 * xStep;
+			    leftRadar.x = station1.x - xStep * 6.25;
+			    leftRadar.y = station1.y;
+			    leftRadar.alpha = 0.3;
+			    station1.radars.push(leftRadar);
+			    container.addChild(leftRadar);
+			    
+			    var rightRadar = new Radar(station1Radar, station1, Math.PI);
+			    rightRadar.width = 5 * xStep;
+			    rightRadar.height = 15 * xStep;
+			    rightRadar.x = station1.x + xStep * 6.25;
+			    rightRadar.y = station1.y;
+			    rightRadar.alpha = 0.3;
+			    station1.radars.push(rightRadar);
+			    container.addChild(rightRadar);
+			
 			} else {
 				eval(data[matrix[i][j]]);
 			}
@@ -1542,6 +1653,7 @@ function game(){
 	app.stage.addChild(invisibilityButton);	
 	
 	pShip.controlStatus();
+	stations[0].controlStatus();
 	
 	eShips.forEach(function(enemy){
 		enemy.controlStatus();
@@ -1618,6 +1730,18 @@ function game(){
 						container.removeChild(bullet);
 					}
 				}
+			});
+			
+			stations.forEach(function(station){
+			    if(hitTestRectangle(station, bullet)){
+			        ret = station.hit(bullet);
+			        if(ret == undefined){
+			            ret = false;
+			        }
+			        if(ret === false){
+			            container.removeChild(bullet);
+			        }
+			    }
 			});
 			
 			meteors.forEach(function(meteor){
