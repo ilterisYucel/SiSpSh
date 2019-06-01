@@ -149,79 +149,39 @@ class Station1 extends Station{
     
     eFire(rotation, x, y){
         
-        //var fireX;
-        //var fireY;
+        var fireX;
+        var fireY;
         var fireRotation = rotation + Math.PI;
         
 
-        if(rotation => 0 && rotation < Math.PI / 2){
-            var fireX = x;
-            var fireY = this.y + this.height / 2;
+        if(rotation >= 0 && rotation < Math.PI / 2){
+            fireX = x;
+            fireY = this.y + this.height / 2;
             
-            var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
-			eBullet.width = xStep / 8;
-			eBullet.height = xStep / 2;
-			eBullet.x = fireX;
-			eBullet.y = fireY;
-			eBullet.initialPos.x = fireX;
-			eBullet.initialPos.y = fireY;
-			eBullet.range = 10 * xStep;
-			container.addChild(eBullet);
-			eBullets.push(eBullet);
         }    
 
         
-        else if(rotation => Math.PI / 2 && rotation < Math.PI){
-            var fireX = this.x;
-            var fireY = y;
+        if(rotation >= Math.PI / 2 && rotation < Math.PI){
+            fireX = this.x;
+            fireY = y;
             
-            var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
-			eBullet.width = xStep / 8;
-			eBullet.height = xStep / 2;
-			eBullet.x = fireX;
-			eBullet.y = fireY;
-			eBullet.initialPos.x = fireX;
-			eBullet.initialPos.y = fireY;
-			eBullet.range = 10 * xStep;
-			container.addChild(eBullet);
-			eBullets.push(eBullet);
             
         }
         
-        else if(rotation >= Math.PI && rotation < 3 * Math.PI / 2){
-            var fireX = x;
-            var fireY = this.y - this.height / 2;
+        if(rotation >= Math.PI && rotation < 3 * Math.PI / 2){
+            fireX = x;
+            fireY = this.y - this.height / 2;
             
-            var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
-			eBullet.width = xStep / 8;
-			eBullet.height = xStep / 2;
-			eBullet.x = fireX;
-			eBullet.y = fireY;
-			eBullet.initialPos.x = fireX;
-			eBullet.initialPos.y = fireY;
-			eBullet.range = 10 * xStep;
-			container.addChild(eBullet);
-			eBullets.push(eBullet);
         }
         
-        else if(rotation >= 3 * Math.PI / 2 && rotation < 2 * Math.PI){
-            var fireX = this.x;
-            var fireY = y;
+        if(rotation >= 3 * Math.PI / 2 && rotation < 2 * Math.PI){
+            fireX = this.x;
+            fireY = y;
             
-            var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
-			eBullet.width = xStep / 8;
-			eBullet.height = xStep / 2;
-			eBullet.x = fireX;
-			eBullet.y = fireY;
-			eBullet.initialPos.x = fireX;
-			eBullet.initialPos.y = fireY;
-			eBullet.range = 10 * xStep;
-			container.addChild(eBullet);
-			eBullets.push(eBullet);
         }
 
         
-		/*if(this.readyLauncher){
+		if(this.readyLauncher){
 		       
 			var eBullet = new energyBullet(this.bulletTextures["energyBullet"], fireRotation);
 			eBullet.width = xStep / 8;
@@ -233,8 +193,8 @@ class Station1 extends Station{
 			eBullet.range = 10 * xStep;
 			container.addChild(eBullet);
 			eBullets.push(eBullet);
-			//this.readyLauncher = false;
-		}*/
+			this.readyLauncher = false;
+		}
     
     }
 
