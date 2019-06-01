@@ -77,16 +77,21 @@ class Item extends PIXI.Sprite{
 }
 
 class bullet extends PIXI.Sprite{
-	constructor(texture, rotation){
+	constructor(texture, rotation, range = 100){
 		super(texture);
 		this.anchor.set(0.5);
 		this.rotation = rotation;
+		this.initialPos = {
+			x: this.x,
+			y: this.y
+		};
+		this.range = range;
 	}
 }
 
 class energyBullet extends bullet{
-	constructor(texture, rotation, effect = 10, factor = 2){
-		super(texture, rotation);
+	constructor(texture, rotation, effect = 10, factor = 2, range = 100){
+		super(texture, rotation, range);
 		this.factor = factor;
 		this.effect = effect * factor;
 		this.speedX = factor * vFactorX;
@@ -222,6 +227,9 @@ class playerShip extends Ship{
 			eBullet.height = xStep / 2;
 			eBullet.x = this.x;
 			eBullet.y = this.y;
+			eBullet.initialPos.x = this.x;
+			eBullet.initialPos.y = this.y;
+			eBullet.range = 10 * xStep;
 			eBullet.alpha = this.alpha;
 			container.addChild(eBullet);
 			pBullets.push(eBullet);
@@ -405,6 +413,9 @@ class Enemy extends Ship{
 			eBullet.height = xStep / 2;
 			eBullet.x = this.x;
 			eBullet.y = this.y;
+			eBullet.initialPos.x = this.x;
+			eBullet.initialPos.y = this.y;
+			eBullet.range = 10 * xStep;
 			container.addChild(eBullet);
 			eBullets.push(eBullet);
 			this.readyLauncher = false;
@@ -1592,7 +1603,7 @@ function game(){
 			var ret = true;
 			bullet.move();
 			
-			if(contain(bullet, containerBounds) !== undefined){	   
+			if(contain(bullet, containerBounds) !== undefined || calculateDistance(bullet, bullet.initialPos) > bullet.range){	   
 				container.removeChild(bullet);
 				ret = false;
 			}
@@ -1624,7 +1635,7 @@ function game(){
 			var ret = true;
 			bullet.move();
 			
-			if(contain(bullet, containerBounds) !== undefined){	   
+			if(contain(bullet, containerBounds) !== undefined || calculateDistance(bullet, bullet.initialPos) > bullet.range){	   
 				container.removeChild(bullet);
 				ret =  false;
 			}
