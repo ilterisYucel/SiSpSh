@@ -493,6 +493,8 @@ class Enemy extends Ship{
 		this.prevVX = null;
 		this.prevVY = null;
 		this.hitCount = 0;
+		this.crashTime = 0;
+		this.crashId = 0;
 		
 	}
 	
@@ -574,9 +576,13 @@ class Enemy extends Ship{
 	}
 	
 	dealTeamCrash(){
+		var curTime;
+		curTime = new Date().getTime();
 		eShips.forEach(function(eShip){
-			if(calculateDistance(eShip, this) < 1.5 * xStep && eShip.id != this.id){
+			if(calculateDistance(eShip, this) < 1.5 * xStep && eShip.id != this.id && (curTime-this.crashTime > 1000 || eShip.id != this.crashId) ){
 				playerMotors(this.x + container.x, this.y + container.y, (180/Math.PI) * (this.rotation), 2);
+				this.crashId = eShip.id;
+				this.crashTime = curTime;
 				this.rotation += Math.PI;
 				this.x += this.speedX * Math.sin(this.rotation);
 				this.y -= this.speedY * Math.cos(this.rotation);
@@ -1662,7 +1668,9 @@ function game(){
 	app.stage.addChild(invisibilityButton);	
 	
 	pShip.controlStatus();
-	stations[0].controlStatus();
+	for (var i = 0; i < stations.length; i++) {
+		stations[i].controlStatus();
+	}
 	
 	eShips.forEach(function(enemy){
 		enemy.controlStatus();
@@ -1788,7 +1796,7 @@ function game(){
 			
 			eShips.forEach(function(eShip){
 				if(hitTestRectangle(eShip, bullet)){
-					bullet.alpha = 0;
+					bullet.alpha = 0.1;
 					//ret = true;
 					console.log("ok");
 				} else {
