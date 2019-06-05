@@ -53,7 +53,7 @@ var rotationParams = {
 var matrix;
 var data;
 
-let xhr = new XMLHttpRequest();
+var xhr = new XMLHttpRequest();
 xhr.open("GET", "assets/levels/level" + level + ".json", false);
 xhr.send();
 
@@ -1807,7 +1807,7 @@ function game(){
 			
 			stations.forEach(function(station){
 				if(hitTestRectangle(station, bullet)){
-					bullet.alpha = 0.5;
+					bullet.alpha = 0;
 					//ret = true;
 				} else {
 					bullet.alpha = 1.0;
