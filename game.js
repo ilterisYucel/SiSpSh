@@ -6,7 +6,7 @@ var w = window,
 	y = w.innerHeight|| e.clientHeight|| g.clientHeight;
 
 var path = "./assets/images/";
-var level = parseInt(getAllUrlParams().level);
+var level = getAllUrlParams().level;
 var pShip, app, bg, energyCounter, counterStep, proton;
 var pBullets = [];
 var eBullets = [];
@@ -15,6 +15,7 @@ var meteors = [];
 var radars = [];
 var items = [];
 var stations = [];
+var warps = [];
 
 var adLoc = 0.85 * y;
 var factor = (adLoc) / x;
@@ -53,17 +54,6 @@ var rotationParams = {
 var matrix;
 var data;
 
-var xhr = new XMLHttpRequest();
-xhr.open("GET", "assets/levels/level" + level + ".json", false);
-xhr.send();
-
-if (xhr.status < 200 || xhr.status >= 300) {
-	console.log("XHR failed.");
-} else {
-	data = JSON.parse(xhr.responseText);
-	matrix = data.matrix;
-}
-
 class Item extends PIXI.Sprite{
 	constructor(texture, collectFunc = null){
 		super(texture);
@@ -74,6 +64,18 @@ class Item extends PIXI.Sprite{
 	collect(){
 		this.collectFunc();
 		container.removeChild(this);
+	}
+}
+
+class Warp extends PIXI.Sprite{
+	constructor(texture, location){
+		super(texture);
+		this.anchor.set(0.5);
+		this.location = location;
+	}
+	
+	warp(){
+		loadLevel(this.location);
 	}
 }
 
@@ -1265,27 +1267,30 @@ function game(){
 	var renderer = new Proton.PixiRenderer(app.stage);
 	proton.addRenderer(renderer);
 	
-	var bgTexture = new PIXI.Texture.from(path + "starfield.png");
-	var shipTexture = new PIXI.Texture.from(path + "spaceShips_001.png");
-	var playerEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_010.png");
-	var enemyEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_011.png");
-	var meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
-	var shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002b.png");
-	var shipTexture2 = new PIXI.Texture.fromImage(path + "spaceShips_003b.png");
-	var shipTexture3 = new PIXI.Texture.fromImage(path + "spaceShips_004b.png");
-	var itemTexture0 = new PIXI.Texture.fromImage(path + "star_bronze.png");
+	bgTexture = new PIXI.Texture.from(path + "starfield.png");
+	shipTexture = new PIXI.Texture.from(path + "spaceShips_001.png");
+	playerEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_010.png");
+	enemyEnergyBulletTexture = new PIXI.Texture.fromImage(path + "spaceMissiles_011.png");
+	meteorTexture = new PIXI.Texture.fromImage(path + "spaceMeteors_004.png");
+	shipTexture1 = new PIXI.Texture.fromImage(path + "spaceShips_002b.png");
+	shipTexture2 = new PIXI.Texture.fromImage(path + "spaceShips_003b.png");
+	shipTexture3 = new PIXI.Texture.fromImage(path + "spaceShips_004b.png");
 	
-	var breakerTexture = new PIXI.Texture.fromImage(path + "bolt_bronze.png");
-	var catcherTexture = new PIXI.Texture.fromImage(path + "things_bronze.png");
+	itemTexture0 = new PIXI.Texture.fromImage(path + "star_bronze.png");
 	
-	var breakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_009.png");
-	var breakEffect1 = new PIXI.Texture.fromImage(path + "spaceEffects_011.png");
-	var breakEffect2 = new PIXI.Texture.fromImage(path + "spaceEffects_012.png");
-	var breakEffect3 = new PIXI.Texture.fromImage(path + "spaceEffects_013.png");
-	var breakEffect4 = new PIXI.Texture.fromImage(path + "spaceEffects_014.png");
+	warpTexture = new PIXI.Texture.fromImage(path + "spaceBuilding_007.png");
+	
+	breakerTexture = new PIXI.Texture.fromImage(path + "bolt_bronze.png");
+	catcherTexture = new PIXI.Texture.fromImage(path + "things_bronze.png");
+	
+	breakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_009.png");
+	breakEffect1 = new PIXI.Texture.fromImage(path + "spaceEffects_011.png");
+	breakEffect2 = new PIXI.Texture.fromImage(path + "spaceEffects_012.png");
+	breakEffect3 = new PIXI.Texture.fromImage(path + "spaceEffects_013.png");
+	breakEffect4 = new PIXI.Texture.fromImage(path + "spaceEffects_014.png");
 	
 	
-	var breakEffects = [];
+	breakEffects = [];
 	
 	breakEffects.push(breakEffect);
 	breakEffects.push(breakEffect1);
@@ -1293,14 +1298,14 @@ function game(){
 	breakEffects.push(breakEffect3);
 	breakEffects.push(breakEffect4);
 	
-	var shipBreakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_018.png");
+	shipBreakEffect = new PIXI.Texture.fromImage(path + "spaceEffects_018.png");
 	
-	var enemyOneRadar = new PIXI.Texture.fromImage(path + "radar.png");
+	enemyOneRadar = new PIXI.Texture.fromImage(path + "radar.png");
 	
-	var pDeathItem = new PIXI.Texture.fromImage(path + "spaceParts_001.png");
-	var pDeathItem1 = new PIXI.Texture.fromImage(path + "spaceParts_003.png");
-	var pDeathItem2 = new PIXI.Texture.fromImage(path + "spaceParts_033.png");
-	var pDeathItem3 = new PIXI.Texture.fromImage(path + "spaceParts_042.png");
+	pDeathItem = new PIXI.Texture.fromImage(path + "spaceParts_001.png");
+	pDeathItem1 = new PIXI.Texture.fromImage(path + "spaceParts_003.png");
+	pDeathItem2 = new PIXI.Texture.fromImage(path + "spaceParts_033.png");
+	pDeathItem3 = new PIXI.Texture.fromImage(path + "spaceParts_042.png");
 	
 	pDeathItems = [];
 	
@@ -1309,10 +1314,10 @@ function game(){
 	pDeathItems.push(pDeathItem2);
 	pDeathItems.push(pDeathItem3);
 	
-	var eDeathItem = new PIXI.Texture.fromImage(path + "spaceParts_002.png");
-	var eDeathItem1 = new PIXI.Texture.fromImage(path + "spaceParts_004.png");
-	var eDeathItem2 = new PIXI.Texture.fromImage(path + "spaceParts_040.png");
-	var eDeathItem3 = new PIXI.Texture.fromImage(path + "spaceParts_045.png");
+	eDeathItem = new PIXI.Texture.fromImage(path + "spaceParts_002.png");
+	eDeathItem1 = new PIXI.Texture.fromImage(path + "spaceParts_004.png");
+	eDeathItem2 = new PIXI.Texture.fromImage(path + "spaceParts_040.png");
+	eDeathItem3 = new PIXI.Texture.fromImage(path + "spaceParts_045.png");
 	
 	eDeathItems = [];
 	
@@ -1321,10 +1326,10 @@ function game(){
 	eDeathItems.push(eDeathItem2);
 	eDeathItems.push(eDeathItem3);
 	
-	var transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
-	var invisibilityItem = new PIXI.Texture.fromImage(path + "shield_bronze.png");
-	var station1Texture = new PIXI.Texture.fromImage(path + "spaceStation_020.png")
-	var station1Radar = new PIXI.Texture.fromImage(path + "station1_radar.png");
+	transportMeteorItem = new PIXI.Texture.fromImage(path + "spaceEffects_003.png");
+	invisibilityItem = new PIXI.Texture.fromImage(path + "shield_bronze.png");
+	station1Texture = new PIXI.Texture.fromImage(path + "spaceStation_020.png")
+	station1Radar = new PIXI.Texture.fromImage(path + "station1_radar.png");
 	
 	bg = new PIXI.Sprite(bgTexture);
 	bg.x = 0;
@@ -1346,246 +1351,7 @@ function game(){
 	container = new PIXI.Container();
 	app.stage.addChild(container);
 	
-	for(var i = 0; i < matrix.length; i++){
-		for(var j = 0; j < matrix[0].length; j++){
-			itemID++;
-			if(matrix[i][j] == 'M'){
-				var meteor = new Meteor(meteorTexture, breakEffects);
-				meteor.id = itemID;
-				meteor.x = (j-10) * xStep + 0.5 * xStep;
-				meteor.y = (i-10) * yStep + 0.5 * xStep;
-				meteor.width = xStep;
-				meteor.height = xStep;
-				meteor.s = Math.PI/3600;
-				meteor.calculateRotParams();
-				meteor.state = "free";
-				meteors.push(meteor);
-				
-				container.addChild(meteor);
-			} else if (matrix[i][j] == 'W') {
-				var meteor = new Meteor(meteorTexture, breakEffects);
-				meteor.id = itemID;
-				meteor.x = (j-10) * xStep + 0.5 * xStep;
-				meteor.y = (i-10) * yStep + 0.5 * xStep;
-				meteor.width = xStep;
-				meteor.height = xStep;
-				meteor.s = -Math.PI/3600;
-
-				meteor.calculateRotParams();
-				meteor.state = "free";
-				meteors.push(meteor);
-				
-				container.addChild(meteor);
-			}
-			else if(matrix[i][j] == 'P'){
-				pShip = new playerShip(shipTexture);
-				pShip.id = itemID;
-				pShip.width = xStep;
-				pShip.height = xStep;
-				pShip.x = (j-10) * xStep + 0.5 * xStep;
-				pShip.y = (i-10) * yStep + 0.5 * xStep;
-				pShip.bulletTextures["energyBullet"] = playerEnergyBulletTexture;
-				pShip.effectTextures["breakEffect"] =  shipBreakEffect;
-				pShip.effectTextures["transportMeteorEffect"] = transportMeteorItem;
-				pShip.deathItemsTextures = pDeathItems;
-				container.addChild(pShip);
-				
-				container.x = x/2 - pShip.x;
-				container.y = adLoc/2 - pShip.y;
-				if (container.x < -x) {
-					container.x = -x;
-				} else if (container.x > x) {
-					container.x = x;
-				}
-				if (container.y < -adLoc) {
-					container.y = -adLoc;
-				} else if (container.y > adLoc) {
-					container.y = adLoc;
-				}
-			}
-			else if(matrix[i][j] == '1'){
-				var enemy = new Enemy1(shipTexture1);
-				enemy.id = itemID;
-				enemy.width = xStep;
-				enemy.height = xStep;
-				enemy.x = (j-10) * xStep + 0.5 * xStep;
-				enemy.y = (i-10) * yStep + 0.5 * xStep;
-				enemy.rotation = j > 5 ?  (Math.PI / 2) : (3 * Math.PI / 2);
-				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
-				enemy.deathItemsTextures = eDeathItems;
-				enemy.effectTextures["gasEffect"] = breakEffects;
-				eShips.push(enemy);
-				
-				container.addChild(enemy);
-				
-				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
-				frontRadar.width = xStep * 2;
-				frontRadar.height = xStep * 2;
-				frontRadar.x = enemy.x + 1.5 * xStep;
-				frontRadar.y = enemy.y;
-				frontRadar.alpha = 0.5;
-				radars.push(frontRadar);
-				container.addChild(frontRadar);
-				
-				var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
-				endRadar.width = xStep * 2;
-				endRadar.height = xStep * 2;
-				endRadar.x = enemy.x - 1.5 * xStep;
-				endRadar.y = enemy.y;
-				endRadar.alpha = 0.5;
-				radars.push(endRadar);
-				container.addChild(endRadar);
-				
-				enemy.radars.push(frontRadar);
-				enemy.radars.push(endRadar);				  
-			}
-			else if(matrix[i][j] == '2'){
-				var enemy = new Enemy2(shipTexture1);
-				enemy.id = itemID;
-				enemy.width = xStep;
-				enemy.height = xStep;
-				enemy.x = (j-10) * xStep + 0.5 * xStep;
-				enemy.y = (i-10) * yStep + 0.5 * xStep;
-				enemy.rotation = j > 5 ?  (Math.PI) : 0;
-				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
-				enemy.deathItemsTextures = eDeathItems;
-				enemy.effectTextures["gasEffect"] = breakEffects;
-				eShips.push(enemy);
-				
-				container.addChild(enemy);
-				
-				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
-				frontRadar.width = xStep * 2;
-				frontRadar.height = xStep * 2;
-				frontRadar.x = enemy.x;
-				frontRadar.y = enemy.y + 1.5 * yStep;
-				frontRadar.alpha = 0.5;
-				radars.push(frontRadar);
-				container.addChild(frontRadar);
-				
-				var endRadar = new Radar(enemyOneRadar, enemy, 0);
-				endRadar.width = xStep * 2;
-				endRadar.height = xStep * 2;
-				endRadar.x = enemy.x;
-				endRadar.y = enemy.y - 1.5 * yStep;
-				endRadar.alpha = 0.5;
-				radars.push(endRadar);
-				container.addChild(endRadar);
-				
-				enemy.radars.push(frontRadar);
-				enemy.radars.push(endRadar);	 
-			} else if(matrix[i][j] == '3'){
-				var enemy = new Enemy3(shipTexture2);
-				enemy.id = itemID;
-				enemy.width = xStep;
-				enemy.height = xStep;
-				enemy.x = (j-10) * xStep + 0.5 * xStep;
-				enemy.y = (i-10) * yStep + 0.5 * xStep;
-				var rand = Math.random();
-				enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
-				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
-				enemy.deathItemsTextures = eDeathItems;
-				eShips.push(enemy);
-				container.addChild(enemy);
-				
-				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
-				frontRadar.width = xStep * 1.5;
-				frontRadar.height = xStep * 1.2;
-				frontRadar.x = enemy.x;
-				frontRadar.y = enemy.y + 1.5 * yStep;
-				frontRadar.alpha = 0.5;
-				radars.push(frontRadar);
-				container.addChild(frontRadar);
-				enemy.radars.push(frontRadar);
-			} else if(matrix[i][j] == '4'){
-				var enemy = new Enemy4(shipTexture3);
-				enemy.id = itemID;
-				enemy.width = xStep;
-				enemy.height = xStep;
-				enemy.x = (j-10) * xStep + 0.5 * xStep;
-				enemy.y = (i-10) * yStep + 0.5 * xStep;
-				var rand = Math.random();
-				enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
-				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
-				enemy.deathItemsTextures = eDeathItems;
-				eShips.push(enemy);
-				container.addChild(enemy);
-				
-				if (enemy.rotation == Math.PI || enemy.rotation == 0) {
-					var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
-					frontRadar.width = xStep * 2;
-					frontRadar.height = xStep * 2;
-					frontRadar.x = enemy.x;
-					frontRadar.y = enemy.y + 1.5 * yStep;
-					frontRadar.alpha = 0.5;
-					radars.push(frontRadar);
-					container.addChild(frontRadar);
-					
-					var endRadar = new Radar(enemyOneRadar, enemy, 0);
-					endRadar.width = xStep * 2;
-					endRadar.height = xStep * 2;
-					endRadar.x = enemy.x;
-					endRadar.y = enemy.y - 1.5 * yStep;
-					endRadar.alpha = 0.5;
-					radars.push(endRadar);
-					container.addChild(endRadar);
-				} else {
-					var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
-					frontRadar.width = xStep * 2;
-					frontRadar.height = xStep * 2;
-					frontRadar.x = enemy.x + 1.5 * xStep;
-					frontRadar.y = enemy.y;
-					frontRadar.alpha = 0.5;
-					radars.push(frontRadar);
-					container.addChild(frontRadar);
-					
-					var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
-					endRadar.width = xStep * 2;
-					endRadar.height = xStep * 2;
-					endRadar.x = enemy.x - 1.5 * xStep;
-					endRadar.y = enemy.y;
-					endRadar.alpha = 0.5;
-					radars.push(endRadar);
-					container.addChild(endRadar);
-				}
-				enemy.radars.push(frontRadar);
-				enemy.radars.push(endRadar);	   
-				
-			} else if (matrix[i][j] == 'S' || matrix[i][j] == 's') {
-				// Do nothing
-			} else if(matrix[i][j] == 'I'){
-			    var station1 = new Station1(station1Texture);
-			    station1.width = 2.5 * xStep;
-			    station1.height = 5 * xStep;
-			    station1.x = (j-10) * xStep + 1.25 * xStep;
-			    station1.y = (i-10) * yStep + 2.5 * xStep;
-			    station1.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
-			    station1.shipsTextures["1"] = shipTexture1;
-			    container.addChild(station1);
-			    stations.push(station1);
-			    var leftRadar = new Radar(station1Radar, station1, 0);
-			    leftRadar.width = 5 * xStep;
-			    leftRadar.height = 15 * xStep;
-			    leftRadar.x = station1.x - xStep * 6.25;
-			    leftRadar.y = station1.y;
-			    leftRadar.alpha = 0.3;
-			    station1.radars.push(leftRadar);
-			    container.addChild(leftRadar);
-			    
-			    var rightRadar = new Radar(station1Radar, station1, Math.PI);
-			    rightRadar.width = 5 * xStep;
-			    rightRadar.height = 15 * xStep;
-			    rightRadar.x = station1.x + xStep * 6.25;
-			    rightRadar.y = station1.y;
-			    rightRadar.alpha = 0.3;
-			    station1.radars.push(rightRadar);
-			    container.addChild(rightRadar);
-			
-			} else {
-				eval(data[matrix[i][j]]);
-			}
-		}
-	}
+	loadLevel("level" + level);
 	
 	energyCounter = new PIXI.Container();
 	energyCounter.position.set(xStep / 2, xStep / 2 );
@@ -1725,6 +1491,12 @@ function game(){
 			}
 			
 			return ret;
+		});
+		
+		warps.forEach(function(warp){
+			if (hitTestRectangle(warp, pShip)){
+				warp.warp();
+			}
 		});
 		
 		pBullets = pBullets.filter(function(bullet){
@@ -2468,6 +2240,306 @@ function getAllUrlParams(url) {
 	}
 
   return obj;
+}
+
+function loadLevel(location){
+	
+	level = location.substring(5);
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", "assets/levels/level" + level + ".json", false);
+	xhr.send();
+
+	if (xhr.status < 200 || xhr.status >= 300) {
+		console.log("XHR failed.");
+		return;
+	} else {
+		data = JSON.parse(xhr.responseText);
+		matrix = data.matrix;
+	}
+	
+	container.removeChild(pShip);
+	
+	pBullets.forEach(function(element){
+		container.removeChild(element);
+	});
+	pBullets.length = 0;
+	
+	eBullets.forEach(function(element){
+		container.removeChild(element);
+	});
+	eBullets.length = 0;
+	
+	eShips.forEach(function(element){
+		container.removeChild(element);
+	});
+	eShips.length = 0;
+	
+	meteors.forEach(function(element){
+		container.removeChild(element);
+	});
+	meteors.length = 0;
+	
+	radars.forEach(function(element){
+		container.removeChild(element);
+	});
+	radars.length = 0;
+	
+	items.forEach(function(element){
+		container.removeChild(element);
+	});
+	items.length = 0;
+	
+	stations.forEach(function(element){
+		container.removeChild(element);
+	});
+	stations.length = 0;
+	
+	warps.forEach(function(element){
+		container.removeChild(element);
+	});
+	warps.length = 0;
+	
+	for(var i = 0; i < matrix.length; i++){
+		for(var j = 0; j < matrix[0].length; j++){
+			itemID++;
+			if(matrix[i][j] == 'M'){
+				var meteor = new Meteor(meteorTexture, breakEffects);
+				meteor.id = itemID;
+				meteor.x = (j-10) * xStep + 0.5 * xStep;
+				meteor.y = (i-10) * yStep + 0.5 * xStep;
+				meteor.width = xStep;
+				meteor.height = xStep;
+				meteor.s = Math.PI/3600;
+				meteor.calculateRotParams();
+				meteor.state = "free";
+				meteors.push(meteor);
+				
+				container.addChild(meteor);
+			} else if (matrix[i][j] == 'W') {
+				var meteor = new Meteor(meteorTexture, breakEffects);
+				meteor.id = itemID;
+				meteor.x = (j-10) * xStep + 0.5 * xStep;
+				meteor.y = (i-10) * yStep + 0.5 * xStep;
+				meteor.width = xStep;
+				meteor.height = xStep;
+				meteor.s = -Math.PI/3600;
+
+				meteor.calculateRotParams();
+				meteor.state = "free";
+				meteors.push(meteor);
+				
+				container.addChild(meteor);
+			}
+			else if(matrix[i][j] == 'P'){
+				pShip = new playerShip(shipTexture);
+				pShip.id = itemID;
+				pShip.width = xStep;
+				pShip.height = xStep;
+				pShip.x = (j-10) * xStep + 0.5 * xStep;
+				pShip.y = (i-10) * yStep + 0.5 * xStep;
+				pShip.bulletTextures["energyBullet"] = playerEnergyBulletTexture;
+				pShip.effectTextures["breakEffect"] =  shipBreakEffect;
+				pShip.effectTextures["transportMeteorEffect"] = transportMeteorItem;
+				pShip.deathItemsTextures = pDeathItems;
+				container.addChild(pShip);
+				
+				container.x = x/2 - pShip.x;
+				container.y = adLoc/2 - pShip.y;
+				if (container.x < -x) {
+					container.x = -x;
+				} else if (container.x > x) {
+					container.x = x;
+				}
+				if (container.y < -adLoc) {
+					container.y = -adLoc;
+				} else if (container.y > adLoc) {
+					container.y = adLoc;
+				}
+			}
+			else if(matrix[i][j] == '1'){
+				var enemy = new Enemy1(shipTexture1);
+				enemy.id = itemID;
+				enemy.width = xStep;
+				enemy.height = xStep;
+				enemy.x = (j-10) * xStep + 0.5 * xStep;
+				enemy.y = (i-10) * yStep + 0.5 * xStep;
+				enemy.rotation = j > 5 ?  (Math.PI / 2) : (3 * Math.PI / 2);
+				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+				enemy.deathItemsTextures = eDeathItems;
+				enemy.effectTextures["gasEffect"] = breakEffects;
+				eShips.push(enemy);
+				
+				container.addChild(enemy);
+				
+				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
+				frontRadar.width = xStep * 2;
+				frontRadar.height = xStep * 2;
+				frontRadar.x = enemy.x + 1.5 * xStep;
+				frontRadar.y = enemy.y;
+				frontRadar.alpha = 0.5;
+				radars.push(frontRadar);
+				container.addChild(frontRadar);
+				
+				var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
+				endRadar.width = xStep * 2;
+				endRadar.height = xStep * 2;
+				endRadar.x = enemy.x - 1.5 * xStep;
+				endRadar.y = enemy.y;
+				endRadar.alpha = 0.5;
+				radars.push(endRadar);
+				container.addChild(endRadar);
+				
+				enemy.radars.push(frontRadar);
+				enemy.radars.push(endRadar);				  
+			}
+			else if(matrix[i][j] == '2'){
+				var enemy = new Enemy2(shipTexture1);
+				enemy.id = itemID;
+				enemy.width = xStep;
+				enemy.height = xStep;
+				enemy.x = (j-10) * xStep + 0.5 * xStep;
+				enemy.y = (i-10) * yStep + 0.5 * xStep;
+				enemy.rotation = j > 5 ?  (Math.PI) : 0;
+				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+				enemy.deathItemsTextures = eDeathItems;
+				enemy.effectTextures["gasEffect"] = breakEffects;
+				eShips.push(enemy);
+				
+				container.addChild(enemy);
+				
+				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+				frontRadar.width = xStep * 2;
+				frontRadar.height = xStep * 2;
+				frontRadar.x = enemy.x;
+				frontRadar.y = enemy.y + 1.5 * yStep;
+				frontRadar.alpha = 0.5;
+				radars.push(frontRadar);
+				container.addChild(frontRadar);
+				
+				var endRadar = new Radar(enemyOneRadar, enemy, 0);
+				endRadar.width = xStep * 2;
+				endRadar.height = xStep * 2;
+				endRadar.x = enemy.x;
+				endRadar.y = enemy.y - 1.5 * yStep;
+				endRadar.alpha = 0.5;
+				radars.push(endRadar);
+				container.addChild(endRadar);
+				
+				enemy.radars.push(frontRadar);
+				enemy.radars.push(endRadar);	 
+			} else if(matrix[i][j] == '3'){
+				var enemy = new Enemy3(shipTexture2);
+				enemy.id = itemID;
+				enemy.width = xStep;
+				enemy.height = xStep;
+				enemy.x = (j-10) * xStep + 0.5 * xStep;
+				enemy.y = (i-10) * yStep + 0.5 * xStep;
+				var rand = Math.random();
+				enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
+				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+				enemy.deathItemsTextures = eDeathItems;
+				eShips.push(enemy);
+				container.addChild(enemy);
+				
+				var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+				frontRadar.width = xStep * 1.5;
+				frontRadar.height = xStep * 1.2;
+				frontRadar.x = enemy.x;
+				frontRadar.y = enemy.y + 1.5 * yStep;
+				frontRadar.alpha = 0.5;
+				radars.push(frontRadar);
+				container.addChild(frontRadar);
+				enemy.radars.push(frontRadar);
+			} else if(matrix[i][j] == '4'){
+				var enemy = new Enemy4(shipTexture3);
+				enemy.id = itemID;
+				enemy.width = xStep;
+				enemy.height = xStep;
+				enemy.x = (j-10) * xStep + 0.5 * xStep;
+				enemy.y = (i-10) * yStep + 0.5 * xStep;
+				var rand = Math.random();
+				enemy.rotation = rand < 0.5 ? ( rand < 0.25 ? 0 : Math.PI/2) : ( rand < 0.75 ? Math.PI : Math.PI/-2);
+				enemy.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+				enemy.deathItemsTextures = eDeathItems;
+				eShips.push(enemy);
+				container.addChild(enemy);
+				
+				if (enemy.rotation == Math.PI || enemy.rotation == 0) {
+					var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI);
+					frontRadar.width = xStep * 2;
+					frontRadar.height = xStep * 2;
+					frontRadar.x = enemy.x;
+					frontRadar.y = enemy.y + 1.5 * yStep;
+					frontRadar.alpha = 0.5;
+					radars.push(frontRadar);
+					container.addChild(frontRadar);
+					
+					var endRadar = new Radar(enemyOneRadar, enemy, 0);
+					endRadar.width = xStep * 2;
+					endRadar.height = xStep * 2;
+					endRadar.x = enemy.x;
+					endRadar.y = enemy.y - 1.5 * yStep;
+					endRadar.alpha = 0.5;
+					radars.push(endRadar);
+					container.addChild(endRadar);
+				} else {
+					var frontRadar = new Radar(enemyOneRadar, enemy, Math.PI / 2);
+					frontRadar.width = xStep * 2;
+					frontRadar.height = xStep * 2;
+					frontRadar.x = enemy.x + 1.5 * xStep;
+					frontRadar.y = enemy.y;
+					frontRadar.alpha = 0.5;
+					radars.push(frontRadar);
+					container.addChild(frontRadar);
+					
+					var endRadar = new Radar(enemyOneRadar, enemy, 3 * Math.PI / 2);
+					endRadar.width = xStep * 2;
+					endRadar.height = xStep * 2;
+					endRadar.x = enemy.x - 1.5 * xStep;
+					endRadar.y = enemy.y;
+					endRadar.alpha = 0.5;
+					radars.push(endRadar);
+					container.addChild(endRadar);
+				}
+				enemy.radars.push(frontRadar);
+				enemy.radars.push(endRadar);	   
+				
+			} else if (matrix[i][j] == 'S' || matrix[i][j] == 's') {
+				// Do nothing
+			} else if(matrix[i][j] == 'I'){
+			    var station1 = new Station1(station1Texture);
+			    station1.width = 2.5 * xStep;
+			    station1.height = 5 * xStep;
+			    station1.x = (j-10) * xStep + 1.25 * xStep;
+			    station1.y = (i-10) * yStep + 2.5 * xStep;
+			    station1.bulletTextures["energyBullet"] = enemyEnergyBulletTexture;
+			    station1.shipsTextures["1"] = shipTexture1;
+			    container.addChild(station1);
+			    stations.push(station1);
+			    var leftRadar = new Radar(station1Radar, station1, 0);
+			    leftRadar.width = 5 * xStep;
+			    leftRadar.height = 15 * xStep;
+			    leftRadar.x = station1.x - xStep * 6.25;
+			    leftRadar.y = station1.y;
+			    leftRadar.alpha = 0.3;
+			    station1.radars.push(leftRadar);
+			    radars.push(leftRadar);
+			    container.addChild(leftRadar);
+			    
+			    var rightRadar = new Radar(station1Radar, station1, Math.PI);
+			    rightRadar.width = 5 * xStep;
+			    rightRadar.height = 15 * xStep;
+			    rightRadar.x = station1.x + xStep * 6.25;
+			    rightRadar.y = station1.y;
+			    rightRadar.alpha = 0.3;
+			    station1.radars.push(rightRadar);
+			    radars.push(rightRadar);
+			    container.addChild(rightRadar);
+			} else {
+				eval(data[matrix[i][j]]);
+			}
+		}
+	}
 }
 
 window.onload = function(){
